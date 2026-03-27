@@ -487,7 +487,7 @@ def generate_airfoil_xy(values):
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("NACA 4-Digit Generator -> .pts + .dxf with live plot")
+        self.root.title("Airfoil Tools")
         self.root.geometry("1180x730")
         self.logo_image = None
         self.set_window_icon()
@@ -516,15 +516,15 @@ class App:
 
     def setup_dark_theme(self):
         self.colors = {
-            "bg": "#eef2f7",
-            "panel": "#ffffff",
+            "bg": "#0f172a",
+            "panel": "#1e293b",
             "panel_alt": "#dde5f0",
             "fg": "#1d2939",
             "muted": "#667085",
             "accent": "#1570ef",
             "accent_alt": "#175cd3",
             "entry": "#ffffff",
-            "text": "#1d2939",
+            "text": "#e2e8f0",
             "plot_bg": "#ffffff",
             "grid": "#d0d5dd",
         }
