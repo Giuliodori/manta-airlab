@@ -1,67 +1,70 @@
 # Airfoil Tools
 
-Airfoil Tools is a desktop GUI app to generate NACA 4-digit profiles and export them to `.pts` and `.dxf`.
+[![Release EXE](https://img.shields.io/github/v/release/giuliodori/airfoil-tools)](dist/airfoil-tools.exe)
+[![License](https://img.shields.io/github/license/giuliodori/airfoil-tools)](LICENSE)
+
+Airfoil Tools e' una GUI desktop per generare profili NACA a 4 cifre, esportarli in `.pts` e `.dxf`, e stimare `lift` e `drag`.
 
 ![gui](images/gui.png)
 ![Manta](images/manta.jpg)
 
-## Executable (recommended)
+## Installazione semplice (exe consigliato)
 
-For most users, use the executable package.
-
-### 0) Clone
-
-```bash
-git clone <repo-url>
-cd airfoil-tools
-```
+Per la maggior parte degli utenti e' sufficiente l'eseguibile.
 
 ### 1) Download
 
-- Download the latest executable package from the project release page (or from the package shared by your team).
-- Main Windows executable name:
-  - `airfoil-tools.exe`
+Scarica la cartella con l'eseguibile da GitHub:
 
-### 2) Start
+```text
+https://github.com/giuliodori/airfoil-tools/releases/latest
+```
 
-- Double-click `airfoil-tools.exe`.
-- The GUI opens and you can immediately generate and export profiles.
+Se hai clonato o scaricato lo ZIP del repository, il file principale su Windows e':
+- `airfoil-tools\dist\airfoil-tools.exe`
 
-Alternative quick start from repository folder:
-- Double-click `airfoil-tools.bat`
+### 2) Avvio
 
-## Python source (optional)
+- Fai doppio click su `airfoil-tools\dist\airfoil-tools.exe`.
+- La GUI si apre e puoi subito generare ed esportare i profili.
 
-Use this only if you want to run from source.
+Avvio rapido alternativo dalla cartella del repository:
+- Doppio click su `airfoil-tools.bat`
 
-### Requirements (Python source only)
+## Codice sorgente Python (opzionale)
+
+Usa questa sezione solo se vuoi eseguire da sorgente.
+
+### Requisiti (solo sorgente)
 
 - Python 3.10+
 - `numpy`
 - `matplotlib`
-- `ezdxf` (needed for `.dxf` export)
+- `ezdxf` (necessario per l'export `.dxf`)
 
-Install dependencies:
+Installa le dipendenze:
 
 ```bash
 python -m pip install numpy matplotlib ezdxf
 ```
 
-Run:
+Esegui:
 
 ```bash
 python airfoil_tools.py
 ```
 
-On Windows, you can also use:
+Su Windows puoi anche usare:
 - `airfoil-tools.bat`
 
-## CAD software examples for `.pts` and `.dxf`
+## Esempi di CAD per `.pts` e `.dxf`
 
-### Common CAD/3D tools with DXF support
+### CAD/3D con supporto DXF
 
 - AutoCAD
+- CREO Parametric
 - Fusion 360
+- Inventor
 - SolidWorks
 - FreeCAD
 - Rhino
@@ -69,25 +72,55 @@ On Windows, you can also use:
 - DraftSight
 - QCAD
 - LibreCAD
-- Onshape (DXF import workflows)
+- Onshape (workflow DXF)
 
-### Tools commonly used with point files (`.pts`/XYZ text)
+### Software per file di punti (`.pts`/XYZ)
 
 - CloudCompare
 - MeshLab
 - MATLAB
 - GNU Octave
-- Python (NumPy / Pandas workflows)
-- CATIA (point import workflows)
-- Siemens NX (point import workflows)
-- Autodesk Alias (point set workflows)
+- Python (NumPy / Pandas)
+- CATIA (import punti)
+- Siemens NX (import punti)
+- Autodesk Alias (point set)
 
-## License
+## Note sui profili NACA 4 cifre
 
-This project is dual-licensed:
+I profili NACA 4 cifre sono una famiglia storica di profili alari definita da quattro numeri che descrivono in modo semplice la geometria. Sono ancora molto usati per studio preliminare, didattica e comparazioni rapide.
 
-- GNU General Public License v3.0 (GPL-3.0-only) for open-source use
-- Commercial license for proprietary and closed-source use
+### Significato delle cifre
 
-For commercial licensing, contact:
+Le quattro cifre sono `M P TT`:
+
+- `M` (prima cifra) e' il massimo camber in percentuale della corda.
+- `P` (seconda cifra) e' la posizione del massimo camber in decimi di corda.
+- `TT` (ultime due cifre) e' lo spessore massimo in percentuale della corda.
+
+Esempio:
+
+`NACA 2412` significa camber massimo 2% a 40% di corda, spessore 12%.
+
+### Quali profili sono piu' usati e per dove
+
+Profili simmetrici (camber zero) per applicazioni dove serve comportamento simmetrico:
+
+- `NACA 0012` e `NACA 0015` per superfici di coda, timoni e profili generici.
+
+Profili con camber moderato per ali e piccoli velivoli:
+
+- `NACA 2412` e `NACA 4412` per ali leggere e applicazioni generiche dove serve buona portanza.
+
+Profili piu' spessi per robustezza strutturale o basse velocita':
+
+- `NACA 0018` e `NACA 4418` per strutture con vincoli di spessore o Reynolds piu' bassi.
+
+## Licenza
+
+Questo progetto e' rilasciato con doppia licenza:
+
+- GNU General Public License v3.0 (GPL-3.0-only) per uso open-source
+- Licenza commerciale per uso proprietario o closed-source
+
+Per licenze commerciali:
 - info@duilio.cc
