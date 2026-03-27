@@ -12,6 +12,189 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 
+FLUID_PRESETS = {
+    "air": {"rho": 1.225, "mu": 1.81e-5},
+    "water": {"rho": 997.0, "mu": 8.9e-4},
+}
+
+
+AIRFOIL_DB = {
+    "0008": {
+        "re_buckets": [
+            {"re_min": 0, "re_max": 2.0e5, "cl_alpha_per_deg": 0.095, "alpha_zero_lift_deg": 0.0, "cl_max": 0.95, "cd0_base": 0.0170, "k_drag": 0.0150, "alpha_stall_deg": 9.0},
+            {"re_min": 2.0e5, "re_max": 1.0e6, "cl_alpha_per_deg": 0.098, "alpha_zero_lift_deg": 0.0, "cl_max": 1.08, "cd0_base": 0.0140, "k_drag": 0.0130, "alpha_stall_deg": 11.0},
+            {"re_min": 1.0e6, "re_max": float("inf"), "cl_alpha_per_deg": 0.100, "alpha_zero_lift_deg": 0.0, "cl_max": 1.16, "cd0_base": 0.0120, "k_drag": 0.0120, "alpha_stall_deg": 12.0},
+        ]
+    },
+    "0012": {
+        "re_buckets": [
+            {"re_min": 0, "re_max": 2.0e5, "cl_alpha_per_deg": 0.097, "alpha_zero_lift_deg": 0.0, "cl_max": 1.00, "cd0_base": 0.0200, "k_drag": 0.0160, "alpha_stall_deg": 10.0},
+            {"re_min": 2.0e5, "re_max": 1.0e6, "cl_alpha_per_deg": 0.101, "alpha_zero_lift_deg": 0.0, "cl_max": 1.25, "cd0_base": 0.0150, "k_drag": 0.0140, "alpha_stall_deg": 13.0},
+            {"re_min": 1.0e6, "re_max": float("inf"), "cl_alpha_per_deg": 0.104, "alpha_zero_lift_deg": 0.0, "cl_max": 1.38, "cd0_base": 0.0125, "k_drag": 0.0130, "alpha_stall_deg": 15.0},
+        ]
+    },
+    "0015": {
+        "re_buckets": [
+            {"re_min": 0, "re_max": 2.0e5, "cl_alpha_per_deg": 0.095, "alpha_zero_lift_deg": 0.0, "cl_max": 1.00, "cd0_base": 0.0210, "k_drag": 0.0175, "alpha_stall_deg": 10.0},
+            {"re_min": 2.0e5, "re_max": 1.0e6, "cl_alpha_per_deg": 0.100, "alpha_zero_lift_deg": 0.0, "cl_max": 1.25, "cd0_base": 0.0165, "k_drag": 0.0150, "alpha_stall_deg": 13.0},
+            {"re_min": 1.0e6, "re_max": float("inf"), "cl_alpha_per_deg": 0.103, "alpha_zero_lift_deg": 0.0, "cl_max": 1.38, "cd0_base": 0.0140, "k_drag": 0.0140, "alpha_stall_deg": 15.0},
+        ]
+    },
+    "0020": {
+        "re_buckets": [
+            {"re_min": 0, "re_max": 2.0e5, "cl_alpha_per_deg": 0.093, "alpha_zero_lift_deg": 0.0, "cl_max": 0.95, "cd0_base": 0.0240, "k_drag": 0.0190, "alpha_stall_deg": 9.0},
+            {"re_min": 2.0e5, "re_max": 1.0e6, "cl_alpha_per_deg": 0.098, "alpha_zero_lift_deg": 0.0, "cl_max": 1.18, "cd0_base": 0.0190, "k_drag": 0.0170, "alpha_stall_deg": 12.0},
+            {"re_min": 1.0e6, "re_max": float("inf"), "cl_alpha_per_deg": 0.101, "alpha_zero_lift_deg": 0.0, "cl_max": 1.30, "cd0_base": 0.0160, "k_drag": 0.0160, "alpha_stall_deg": 14.0},
+        ]
+    },
+    "2412": {
+        "re_buckets": [
+            {"re_min": 0, "re_max": 2.0e5, "cl_alpha_per_deg": 0.095, "alpha_zero_lift_deg": -1.8, "cl_max": 1.10, "cd0_base": 0.0170, "k_drag": 0.0160, "alpha_stall_deg": 11.0},
+            {"re_min": 2.0e5, "re_max": 1.0e6, "cl_alpha_per_deg": 0.100, "alpha_zero_lift_deg": -2.0, "cl_max": 1.35, "cd0_base": 0.0135, "k_drag": 0.0140, "alpha_stall_deg": 14.0},
+            {"re_min": 1.0e6, "re_max": float("inf"), "cl_alpha_per_deg": 0.103, "alpha_zero_lift_deg": -2.2, "cl_max": 1.50, "cd0_base": 0.0115, "k_drag": 0.0130, "alpha_stall_deg": 16.0},
+        ]
+    },
+    "4412": {
+        "re_buckets": [
+            {"re_min": 0, "re_max": 2.0e5, "cl_alpha_per_deg": 0.094, "alpha_zero_lift_deg": -3.0, "cl_max": 1.15, "cd0_base": 0.0185, "k_drag": 0.0170, "alpha_stall_deg": 10.0},
+            {"re_min": 2.0e5, "re_max": 1.0e6, "cl_alpha_per_deg": 0.099, "alpha_zero_lift_deg": -3.2, "cl_max": 1.45, "cd0_base": 0.0145, "k_drag": 0.0150, "alpha_stall_deg": 13.0},
+            {"re_min": 1.0e6, "re_max": float("inf"), "cl_alpha_per_deg": 0.102, "alpha_zero_lift_deg": -3.4, "cl_max": 1.60, "cd0_base": 0.0125, "k_drag": 0.0140, "alpha_stall_deg": 15.0},
+        ]
+    },
+    "4415": {
+        "re_buckets": [
+            {"re_min": 0, "re_max": 2.0e5, "cl_alpha_per_deg": 0.093, "alpha_zero_lift_deg": -3.0, "cl_max": 1.10, "cd0_base": 0.0200, "k_drag": 0.0180, "alpha_stall_deg": 10.0},
+            {"re_min": 2.0e5, "re_max": 1.0e6, "cl_alpha_per_deg": 0.098, "alpha_zero_lift_deg": -3.2, "cl_max": 1.40, "cd0_base": 0.0160, "k_drag": 0.0160, "alpha_stall_deg": 13.0},
+            {"re_min": 1.0e6, "re_max": float("inf"), "cl_alpha_per_deg": 0.101, "alpha_zero_lift_deg": -3.4, "cl_max": 1.55, "cd0_base": 0.0135, "k_drag": 0.0150, "alpha_stall_deg": 15.0},
+        ]
+    },
+}
+
+
+def parse_naca4_code(code: str):
+    code = code.strip()
+    if len(code) != 4 or not code.isdigit():
+        raise ValueError("Il codice NACA deve avere 4 cifre, ad esempio 2412 o 0012.")
+    m = int(code[0]) / 100.0
+    p = int(code[1]) / 10.0
+    t = int(code[2:4]) / 100.0
+    return {"code": code, "m": m, "p": p, "t": t, "is_symmetric": (code[:2] == "00")}
+
+
+def estimate_fallback_airfoil_parameters(code: str, reynolds: float):
+    geom = parse_naca4_code(code)
+    m = geom["m"]
+    p = geom["p"]
+    t = geom["t"]
+
+    re_factor = min(max((math.log10(max(reynolds, 5.0e4)) - 5.0) / 2.0, 0.0), 1.0)
+
+    cl_alpha = 0.094 + 0.010 * (1.0 - abs(t - 0.12) / 0.12)
+    cl_alpha = max(0.088, min(0.106, cl_alpha))
+    cl_alpha += 0.004 * re_factor
+
+    if geom["is_symmetric"]:
+        alpha_zero = 0.0
+    else:
+        camber_pos_term = (0.4 - p) * 0.8 if p > 0 else 0.0
+        alpha_zero = -(85.0 * m) + camber_pos_term
+
+    cl_max = 1.0 + 10.0 * m + 0.25 * re_factor - 2.0 * abs(t - 0.12)
+    cl_max = max(0.9, min(1.8, cl_max))
+
+    cd0_base = 0.012 + 0.040 * (t - 0.10) ** 2 + 0.006 * (1.0 - re_factor) + 0.005 * m
+    cd0_base = max(0.008, min(0.032, cd0_base))
+
+    k_drag = 0.011 + 0.020 * max(t - 0.08, 0.0) + 0.004 * (1.0 - re_factor)
+    k_drag = max(0.010, min(0.028, k_drag))
+
+    alpha_stall = 10.0 + 80.0 * max(t - 0.10, 0.0) + 45.0 * m + 3.0 * re_factor
+    alpha_stall = max(8.0, min(18.0, alpha_stall))
+
+    return {
+        "cl_alpha_per_deg": cl_alpha,
+        "alpha_zero_lift_deg": alpha_zero,
+        "cl_max": cl_max,
+        "cd0_base": cd0_base,
+        "k_drag": k_drag,
+        "alpha_stall_deg": alpha_stall,
+        "source": "fallback",
+    }
+
+
+def get_airfoil_parameters(code: str, reynolds: float, use_internal_library: bool = True, overrides=None):
+    overrides = overrides or {}
+    base = None
+
+    if use_internal_library and code in AIRFOIL_DB:
+        for bucket in AIRFOIL_DB[code]["re_buckets"]:
+            if bucket["re_min"] <= reynolds < bucket["re_max"]:
+                base = dict(bucket)
+                base["source"] = "library"
+                break
+        if base is None:
+            base = dict(AIRFOIL_DB[code]["re_buckets"][-1])
+            base["source"] = "library"
+    else:
+        base = estimate_fallback_airfoil_parameters(code, reynolds)
+
+    if overrides.get("cd0") is not None:
+        base["cd0_base"] = max(0.0001, float(overrides["cd0"]))
+    if overrides.get("k_drag") is not None:
+        base["k_drag"] = max(0.0001, float(overrides["k_drag"]))
+    if overrides.get("cl_max") is not None:
+        base["cl_max"] = max(0.1, float(overrides["cl_max"]))
+    if overrides.get("alpha_zero_lift_deg") is not None:
+        base["alpha_zero_lift_deg"] = float(overrides["alpha_zero_lift_deg"])
+
+    return base
+
+
+def compute_reynolds(velocity: float, chord: float, density: float, viscosity: float):
+    if viscosity <= 0:
+        raise ValueError("La viscosità dinamica deve essere maggiore di zero.")
+    if chord <= 0:
+        raise ValueError("La corda deve essere maggiore di zero.")
+    return density * velocity * chord / viscosity
+
+
+def compute_cl_cd(alpha_deg: float, params):
+    cl_alpha = float(params["cl_alpha_per_deg"])
+    alpha_zero = float(params["alpha_zero_lift_deg"])
+    cl_max = max(float(params["cl_max"]), 0.05)
+    cd0 = max(float(params["cd0_base"]), 0.0001)
+    k_drag = max(float(params["k_drag"]), 0.0001)
+    alpha_stall = max(float(params["alpha_stall_deg"]), 1.0)
+
+    alpha_eff = alpha_deg - alpha_zero
+    cl_linear = cl_alpha * alpha_eff
+    sign = 1.0 if cl_linear >= 0 else -1.0
+
+    if abs(alpha_eff) <= alpha_stall:
+        cl = max(-cl_max, min(cl_max, cl_linear))
+        stall_drag = 0.0
+    else:
+        cl_stall = cl_alpha * alpha_stall
+        excess = abs(alpha_eff) - alpha_stall
+        degraded = abs(cl_stall) * math.exp(-0.12 * excess)
+        min_post_stall = 0.18 * cl_max
+        cl = sign * max(min_post_stall, min(cl_max, degraded))
+        stall_drag = 0.015 * excess ** 1.25
+
+    cd = cd0 + k_drag * cl**2 + stall_drag
+    return cl, cd
+
+
+def compute_lift_drag(density: float, velocity: float, area: float, cl: float, cd: float):
+    if area <= 0:
+        raise ValueError("L'area alare deve essere maggiore di zero.")
+    q = 0.5 * density * velocity**2
+    lift = q * area * cl
+    drag = q * area * cd
+    ld_ratio = lift / drag if abs(drag) > 1e-12 else float("inf")
+    return lift, drag, ld_ratio
+
+
 def naca4_points_components(code: str, n_side: int = 100, chord: float = 1.0):
     """
     Genera le componenti geometriche del profilo NACA 4 cifre.
@@ -24,13 +207,10 @@ def naca4_points_components(code: str, n_side: int = 100, chord: float = 1.0):
 
     Nota: usa trailing-edge chiuso (coefficiente -0.1036).
     """
-    code = code.strip()
-    if len(code) != 4 or not code.isdigit():
-        raise ValueError("Il codice NACA deve avere 4 cifre, ad esempio 2412 o 0012.")
-
-    m = int(code[0]) / 100.0
-    p = int(code[1]) / 10.0
-    t = int(code[2:4]) / 100.0
+    geom = parse_naca4_code(code)
+    m = geom["m"]
+    p = geom["p"]
+    t = geom["t"]
 
     beta = np.linspace(0.0, math.pi, n_side + 1)
     x = 0.5 * (1.0 - np.cos(beta))  # 0 -> 1
@@ -334,6 +514,25 @@ class App:
         self.decimals_var = tk.StringVar(value="6")
         self.mirror_x_var = tk.BooleanVar(value=False)
         self.mirror_y_var = tk.BooleanVar(value=False)
+        self.use_internal_aero_var = tk.BooleanVar(value=True)
+        self.fluid_var = tk.StringVar(value="air")
+        self.velocity_var = tk.StringVar(value="20.0")
+        self.aero_chord_var = tk.StringVar(value="1.0")
+        self.span_var = tk.StringVar(value="1.0")
+        self.area_var = tk.StringVar(value="")
+        self.alpha_attack_var = tk.StringVar(value="4.0")
+        self.density_var = tk.StringVar(value=str(FLUID_PRESETS["air"]["rho"]))
+        self.viscosity_var = tk.StringVar(value=str(FLUID_PRESETS["air"]["mu"]))
+        self.override_cd0_var = tk.StringVar(value="")
+        self.override_k_drag_var = tk.StringVar(value="")
+        self.override_cl_max_var = tk.StringVar(value="")
+        self.override_alpha0_var = tk.StringVar(value="")
+        self.reynolds_out_var = tk.StringVar(value="-")
+        self.cl_out_var = tk.StringVar(value="-")
+        self.cd_out_var = tk.StringVar(value="-")
+        self.lift_out_var = tk.StringVar(value="-")
+        self.drag_out_var = tk.StringVar(value="-")
+        self.ld_out_var = tk.StringVar(value="-")
 
         row = 0
         ttk.Label(params, text="Profilo NACA").grid(row=row, column=0, sticky="w", pady=4)
@@ -426,6 +625,117 @@ class App:
             command=self.update_preview,
         ).grid(row=row, column=0, columnspan=2, sticky="w", pady=4)
 
+        aero = ttk.LabelFrame(left, text="Aerodinamica", padding=10)
+        aero.pack(fill="x", pady=(10, 0))
+
+        arow = 0
+        ttk.Checkbutton(
+            aero,
+            text="Usa libreria interna NACA",
+            variable=self.use_internal_aero_var,
+            command=self.update_preview,
+        ).grid(row=arow, column=0, columnspan=2, sticky="w", pady=3)
+
+        arow += 1
+        ttk.Label(aero, text="Fluido").grid(row=arow, column=0, sticky="w", pady=3)
+        self.fluid_combo = ttk.Combobox(
+            aero,
+            textvariable=self.fluid_var,
+            values=["air", "water", "custom"],
+            state="readonly",
+            width=12,
+        )
+        self.fluid_combo.grid(row=arow, column=1, sticky="w", pady=3)
+        self.fluid_combo.bind("<<ComboboxSelected>>", self.on_fluid_changed)
+
+        arow += 1
+        ttk.Label(aero, text="Velocità").grid(row=arow, column=0, sticky="w", pady=3)
+        e = ttk.Entry(aero, textvariable=self.velocity_var, width=14)
+        e.grid(row=arow, column=1, sticky="w", pady=3)
+        e.bind("<KeyRelease>", self.schedule_update)
+
+        arow += 1
+        ttk.Label(aero, text="Corda aero").grid(row=arow, column=0, sticky="w", pady=3)
+        e = ttk.Entry(aero, textvariable=self.aero_chord_var, width=14)
+        e.grid(row=arow, column=1, sticky="w", pady=3)
+        e.bind("<KeyRelease>", self.schedule_update)
+
+        arow += 1
+        ttk.Label(aero, text="Apertura (span)").grid(row=arow, column=0, sticky="w", pady=3)
+        e = ttk.Entry(aero, textvariable=self.span_var, width=14)
+        e.grid(row=arow, column=1, sticky="w", pady=3)
+        e.bind("<KeyRelease>", self.schedule_update)
+
+        arow += 1
+        ttk.Label(aero, text="Area (opzionale)").grid(row=arow, column=0, sticky="w", pady=3)
+        e = ttk.Entry(aero, textvariable=self.area_var, width=14)
+        e.grid(row=arow, column=1, sticky="w", pady=3)
+        e.bind("<KeyRelease>", self.schedule_update)
+
+        arow += 1
+        ttk.Label(aero, text="Angolo attacco (°)").grid(row=arow, column=0, sticky="w", pady=3)
+        e = ttk.Entry(aero, textvariable=self.alpha_attack_var, width=14)
+        e.grid(row=arow, column=1, sticky="w", pady=3)
+        e.bind("<KeyRelease>", self.schedule_update)
+
+        arow += 1
+        ttk.Label(aero, text="Densità").grid(row=arow, column=0, sticky="w", pady=3)
+        self.density_entry = ttk.Entry(aero, textvariable=self.density_var, width=14)
+        self.density_entry.grid(row=arow, column=1, sticky="w", pady=3)
+        self.density_entry.bind("<KeyRelease>", self.schedule_update)
+
+        arow += 1
+        ttk.Label(aero, text="Viscosità dinamica").grid(row=arow, column=0, sticky="w", pady=3)
+        self.viscosity_entry = ttk.Entry(aero, textvariable=self.viscosity_var, width=14)
+        self.viscosity_entry.grid(row=arow, column=1, sticky="w", pady=3)
+        self.viscosity_entry.bind("<KeyRelease>", self.schedule_update)
+
+        arow += 1
+        ttk.Label(aero, text="Override cd0").grid(row=arow, column=0, sticky="w", pady=3)
+        e = ttk.Entry(aero, textvariable=self.override_cd0_var, width=14)
+        e.grid(row=arow, column=1, sticky="w", pady=3)
+        e.bind("<KeyRelease>", self.schedule_update)
+
+        arow += 1
+        ttk.Label(aero, text="Override k_drag").grid(row=arow, column=0, sticky="w", pady=3)
+        e = ttk.Entry(aero, textvariable=self.override_k_drag_var, width=14)
+        e.grid(row=arow, column=1, sticky="w", pady=3)
+        e.bind("<KeyRelease>", self.schedule_update)
+
+        arow += 1
+        ttk.Label(aero, text="Override cl_max").grid(row=arow, column=0, sticky="w", pady=3)
+        e = ttk.Entry(aero, textvariable=self.override_cl_max_var, width=14)
+        e.grid(row=arow, column=1, sticky="w", pady=3)
+        e.bind("<KeyRelease>", self.schedule_update)
+
+        arow += 1
+        ttk.Label(aero, text="Override α0 (°)").grid(row=arow, column=0, sticky="w", pady=3)
+        e = ttk.Entry(aero, textvariable=self.override_alpha0_var, width=14)
+        e.grid(row=arow, column=1, sticky="w", pady=3)
+        e.bind("<KeyRelease>", self.schedule_update)
+
+        arow += 1
+        ttk.Separator(aero, orient="horizontal").grid(row=arow, column=0, columnspan=2, sticky="ew", pady=4)
+
+        arow += 1
+        ttk.Label(aero, text="Reynolds").grid(row=arow, column=0, sticky="w", pady=2)
+        ttk.Label(aero, textvariable=self.reynolds_out_var).grid(row=arow, column=1, sticky="w", pady=2)
+        arow += 1
+        ttk.Label(aero, text="CL").grid(row=arow, column=0, sticky="w", pady=2)
+        ttk.Label(aero, textvariable=self.cl_out_var).grid(row=arow, column=1, sticky="w", pady=2)
+        arow += 1
+        ttk.Label(aero, text="CD").grid(row=arow, column=0, sticky="w", pady=2)
+        ttk.Label(aero, textvariable=self.cd_out_var).grid(row=arow, column=1, sticky="w", pady=2)
+        arow += 1
+        ttk.Label(aero, text="Lift").grid(row=arow, column=0, sticky="w", pady=2)
+        ttk.Label(aero, textvariable=self.lift_out_var).grid(row=arow, column=1, sticky="w", pady=2)
+        arow += 1
+        ttk.Label(aero, text="Drag").grid(row=arow, column=0, sticky="w", pady=2)
+        ttk.Label(aero, textvariable=self.drag_out_var).grid(row=arow, column=1, sticky="w", pady=2)
+        arow += 1
+        ttk.Label(aero, text="L/D").grid(row=arow, column=0, sticky="w", pady=2)
+        ttk.Label(aero, textvariable=self.ld_out_var).grid(row=arow, column=1, sticky="w", pady=2)
+
         row += 1
         ttk.Separator(params, orient="horizontal").grid(row=row, column=0, columnspan=2, sticky="ew", pady=8)
 
@@ -485,6 +795,7 @@ class App:
         self.last_y = None
 
         self.update_mode_fields()
+        self.update_fluid_fields()
         self.update_preview()
 
     def mode_internal_value(self):
@@ -503,10 +814,87 @@ class App:
         self.curv_dir_combo.config(state=readonly_state)
         self.keep_developed_check.config(state=state)
 
+    def on_fluid_changed(self, event=None):
+        fluid = self.fluid_var.get().strip().lower()
+        if fluid in FLUID_PRESETS:
+            self.density_var.set(str(FLUID_PRESETS[fluid]["rho"]))
+            self.viscosity_var.set(str(FLUID_PRESETS[fluid]["mu"]))
+        self.update_fluid_fields()
+        self.update_preview()
+
+    def update_fluid_fields(self):
+        fluid = self.fluid_var.get().strip().lower()
+        state = "normal" if fluid == "custom" else "disabled"
+        self.density_entry.config(state=state)
+        self.viscosity_entry.config(state=state)
+
     def schedule_update(self, event=None):
         if self._update_job is not None:
             self.root.after_cancel(self._update_job)
         self._update_job = self.root.after(200, self.update_preview)
+
+    @staticmethod
+    def _parse_optional_float(txt):
+        raw = txt.strip()
+        if not raw:
+            return None
+        return float(raw.replace(",", "."))
+
+    def compute_aero_results(self, vals):
+        code = vals["code"]
+        alpha = float(self.alpha_attack_var.get().replace(",", "."))
+        velocity = float(self.velocity_var.get().replace(",", "."))
+        chord = float(self.aero_chord_var.get().replace(",", "."))
+        span = float(self.span_var.get().replace(",", "."))
+
+        fluid = self.fluid_var.get().strip().lower()
+        if fluid in FLUID_PRESETS:
+            density = FLUID_PRESETS[fluid]["rho"]
+            viscosity = FLUID_PRESETS[fluid]["mu"]
+        else:
+            density = float(self.density_var.get().replace(",", "."))
+            viscosity = float(self.viscosity_var.get().replace(",", "."))
+
+        area_override = self._parse_optional_float(self.area_var.get())
+        area = area_override if area_override is not None else chord * span
+        if velocity <= 0:
+            raise ValueError("La velocità deve essere maggiore di zero.")
+        if span <= 0:
+            raise ValueError("Lo span deve essere maggiore di zero.")
+
+        reynolds = compute_reynolds(velocity, chord, density, viscosity)
+        overrides = {
+            "cd0": self._parse_optional_float(self.override_cd0_var.get()),
+            "k_drag": self._parse_optional_float(self.override_k_drag_var.get()),
+            "cl_max": self._parse_optional_float(self.override_cl_max_var.get()),
+            "alpha_zero_lift_deg": self._parse_optional_float(self.override_alpha0_var.get()),
+        }
+        params = get_airfoil_parameters(
+            code=code,
+            reynolds=reynolds,
+            use_internal_library=self.use_internal_aero_var.get(),
+            overrides=overrides,
+        )
+        cl, cd = compute_cl_cd(alpha_deg=alpha, params=params)
+        lift, drag, ld_ratio = compute_lift_drag(density=density, velocity=velocity, area=area, cl=cl, cd=cd)
+
+        return {
+            "reynolds": reynolds,
+            "cl": cl,
+            "cd": cd,
+            "lift": lift,
+            "drag": drag,
+            "ld_ratio": ld_ratio,
+            "params_source": params.get("source", "fallback"),
+        }
+
+    def update_aero_display(self, aero):
+        self.reynolds_out_var.set(f"{aero['reynolds']:.3e}")
+        self.cl_out_var.set(f"{aero['cl']:.4f}")
+        self.cd_out_var.set(f"{aero['cd']:.4f}")
+        self.lift_out_var.set(f"{aero['lift']:.3f}")
+        self.drag_out_var.set(f"{aero['drag']:.3f}")
+        self.ld_out_var.set(f"{aero['ld_ratio']:.3f}")
 
     def get_values(self):
         mode = self.mode_internal_value()
@@ -555,6 +943,7 @@ class App:
             vals = self.get_values()
             x, y = generate_airfoil_xy(vals)
             pts_text, x, y, _ = write_pts_text(x, y, decimals=vals["decimals"])
+            aero = self.compute_aero_results(vals)
 
             self.last_pts_text = pts_text
             self.last_x = x
@@ -562,9 +951,16 @@ class App:
 
             self.text.delete("1.0", "end")
             self.text.insert("1.0", pts_text)
+            self.update_aero_display(aero)
 
             self.redraw_plot(x, y, vals)
         except Exception as e:
+            self.reynolds_out_var.set("-")
+            self.cl_out_var.set("-")
+            self.cd_out_var.set("-")
+            self.lift_out_var.set("-")
+            self.drag_out_var.set("-")
+            self.ld_out_var.set("-")
             self.show_plot_error(str(e))
 
     def redraw_plot(self, x, y, vals):
