@@ -74,7 +74,7 @@ AIRFOIL_DB = {
 def parse_naca4_code(code: str):
     code = code.strip()
     if len(code) != 4 or not code.isdigit():
-        raise ValueError("Il codice NACA deve avere 4 cifre, ad esempio 2412 o 0012.")
+        raise ValueError("NACA code must have 4 digits, for example 2412 or 0012.")
     m = int(code[0]) / 100.0
     p = int(code[1]) / 10.0
     t = int(code[2:4]) / 100.0
@@ -152,9 +152,9 @@ def get_airfoil_parameters(code: str, reynolds: float, use_internal_library: boo
 
 def compute_reynolds(velocity: float, chord: float, density: float, viscosity: float):
     if viscosity <= 0:
-        raise ValueError("La viscosità dinamica deve essere maggiore di zero.")
+        raise ValueError("Dynamic viscosity must be greater than zero.")
     if chord <= 0:
-        raise ValueError("La corda deve essere maggiore di zero.")
+        raise ValueError("Chord must be greater than zero.")
     return density * velocity * chord / viscosity
 
 
@@ -187,7 +187,7 @@ def compute_cl_cd(alpha_deg: float, params):
 
 def compute_lift_drag(density: float, velocity: float, area: float, cl: float, cd: float):
     if area <= 0:
-        raise ValueError("L'area alare deve essere maggiore di zero.")
+        raise ValueError("Wing area must be greater than zero.")
     q = 0.5 * density * velocity**2
     lift = q * area * cl
     drag = q * area * cd
@@ -197,15 +197,15 @@ def compute_lift_drag(density: float, velocity: float, area: float, cl: float, c
 
 def naca4_points_components(code: str, n_side: int = 100, chord: float = 1.0):
     """
-    Genera le componenti geometriche del profilo NACA 4 cifre.
+    Generates geometric components of a NACA 4-digit profile.
 
-    Restituisce:
-    - x: coordinata lungo corda [0..chord]
-    - yc: linea media
-    - theta: angolo locale linea media
-    - yt: semispessore
+    Returns:
+    - x: coordinate along chord [0..chord]
+    - yc: camber line
+    - theta: local camber-line angle
+    - yt: half-thickness
 
-    Nota: usa trailing-edge chiuso (coefficiente -0.1036).
+    Note: uses closed trailing edge (coefficient -0.1036).
     """
     geom = parse_naca4_code(code)
     m = geom["m"]
@@ -245,7 +245,7 @@ def naca4_points_components(code: str, n_side: int = 100, chord: float = 1.0):
 
 
 def close_profile(x, y):
-    """Garantisce che primo e ultimo punto coincidano."""
+    """Ensures first and last points coincide."""
     x = np.array(x, dtype=float)
     y = np.array(y, dtype=float)
     if len(x) == 0:
@@ -258,8 +258,8 @@ def close_profile(x, y):
 
 def build_base_airfoil_xy(code: str, n_side: int = 100, chord: float = 1.0):
     """
-    Profilo piano NACA 4 cifre.
-    Ordine punti: estradosso TE -> LE, poi intradosso LE -> TE.
+    Flat NACA 4-digit profile.
+    Point order: upper surface TE -> LE, then lower surface LE -> TE.
     """
     x, yc, theta, yt = naca4_points_components(code=code, n_side=n_side, chord=chord)
 
@@ -289,20 +289,20 @@ def build_curved_airfoil_xy(
     keep_developed_chord: bool = True,
 ):
     """
-    Genera il profilo curvato su arco di raggio R.
+    Generates a curved profile on an arc of radius R.
 
-    Strategia:
-    1) calcola componenti NACA locali (x, yc, theta, yt)
-    2) mappa la linea media su arco
-    3) applica lo scostamento locale lungo la normale locale dell'arco
+    Strategy:
+    1) compute local NACA components (x, yc, theta, yt)
+    2) map the camber line onto an arc
+    3) apply local offset along the local arc normal
 
     keep_developed_chord=True:
-      x è sviluppo d'arco (theta = x / R)
+      x is arc length (theta = x / R)
     keep_developed_chord=False:
-      x è proiezione lineare (theta = asin(x / R))
+      x is linear projection (theta = asin(x / R))
     """
     if radius <= 0:
-        raise ValueError("Il raggio di curvatura deve essere maggiore di zero.")
+        raise ValueError("Curvature radius must be greater than zero.")
 
     x, yc, theta_local, yt = naca4_points_components(code=code, n_side=n_side, chord=chord)
 
@@ -311,35 +311,35 @@ def build_curved_airfoil_xy(
     else:
         if np.max(x) > radius:
             raise ValueError(
-                "Con corda in proiezione lineare è necessario raggio >= corda. "
-                "Aumenta il raggio o attiva 'mantieni corda sviluppata'."
+                "With linear projected chord, radius must be >= chord. "
+                "Increase radius or enable 'keep developed chord'."
             )
         ratio = np.clip(x / radius, -1.0, 1.0)
         phi = np.arcsin(ratio)
 
-    # verso curvatura: convesso (+1), concavo (-1)
+    # curvature direction: convex (+1), concave (-1)
     sign = 1.0 if convex else -1.0
 
-    # base su arco passante per origine: x_base=R*sin(phi), y_base=sign*R*(1-cos(phi))
+    # base arc through origin: x_base=R*sin(phi), y_base=sign*R*(1-cos(phi))
     x_base = radius * np.sin(phi)
     y_base = sign * radius * (1.0 - np.cos(phi))
 
-    # tangente locale arco
+    # local arc tangent
     tx = np.cos(phi)
     ty = sign * np.sin(phi)
 
-    # normale locale arco (ruotata +90°)
+    # local arc normal (rotated +90°)
     nx = -ty
     ny = tx
 
-    # angolo tra asse x locale e tangente arco
+    # angle between local x-axis and arc tangent
     alpha = np.arctan2(ty, tx)
 
-    # linea media mappata su arco
+    # camber line mapped to arc
     x_cam = x_base + yc * nx
     y_cam = y_base + yc * ny
 
-    # normale complessiva locale profilo (arco + camber NACA)
+    # complete local profile normal (arc + NACA camber)
     total_angle = alpha + theta_local
     npx = -np.sin(total_angle)
     npy = np.cos(total_angle)
@@ -361,7 +361,7 @@ def build_curved_airfoil_xy(
 
 
 def transform_points(x, y, angle_deg=0.0, mirror_x=False, mirror_y=False):
-    """Specchi e rotazione finali globali."""
+    """Global final mirrors and rotation."""
     x = np.array(x, dtype=float)
     y = np.array(y, dtype=float)
 
@@ -391,7 +391,7 @@ def format_number(value: float, decimals: int = 6) -> str:
 
 
 def write_pts_text(x, y, decimals: int = 6):
-    """Writer .pts compatibile: x TAB y TAB z con z=0."""
+    """Compatible .pts writer: x TAB y TAB z with z=0."""
     x, y = close_profile(x, y)
     z = np.zeros_like(x)
     lines = []
@@ -410,7 +410,7 @@ def write_dxf_polyline(path: str, x, y, layer: str = "AIRFOIL"):
         import ezdxf
     except ImportError as exc:
         raise RuntimeError(
-            "La libreria 'ezdxf' non è installata. Installa con: pip install ezdxf"
+            "Library 'ezdxf' is not installed. Install with: pip install ezdxf"
         ) from exc
 
     x, y = close_profile(x, y)
@@ -428,8 +428,8 @@ def write_dxf_polyline(path: str, x, y, layer: str = "AIRFOIL"):
 
 def naca4_points_base(code: str, n_side: int = 100, chord: float = 1.0):
     """
-    Compatibilità con API precedente:
-    ritorna x, y, z per profilo piano in ordine TE estradosso -> LE -> TE intradosso.
+    Backward compatible with previous API:
+    returns x, y, z for flat profile in order upper TE -> LE -> lower TE.
     """
     x, y = build_base_airfoil_xy(code=code, n_side=n_side, chord=chord)
     z = np.zeros_like(x)
@@ -446,8 +446,8 @@ def build_pts_text(
     decimals: int = 6,
 ):
     """
-    Compatibilità con API precedente:
-    genera testo .pts con trasformazioni globali applicate.
+    Backward compatible with previous API:
+    generates .pts text with global transforms applied.
     """
     x, y, z = naca4_points_base(code=code, n_side=n_side, chord=chord)
     x, y = transform_points(x, y, angle_deg=angle_deg, mirror_x=mirror_x, mirror_y=mirror_y)
@@ -456,7 +456,7 @@ def build_pts_text(
 
 
 def generate_airfoil_xy(values):
-    """Seleziona modalità di generazione e applica trasformazioni finali."""
+    """Selects generation mode and applies final transforms."""
     if values["mode"] == "flat":
         x, y = build_base_airfoil_xy(
             code=values["code"],
@@ -486,7 +486,7 @@ def generate_airfoil_xy(values):
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("Generatore NACA 4 cifre -> .pts + .dxf con grafico live")
+        self.root.title("NACA 4-Digit Generator -> .pts + .dxf with live plot")
         self.root.geometry("1180x730")
         self.setup_dark_theme()
 
@@ -504,16 +504,17 @@ class App:
 
     def setup_dark_theme(self):
         self.colors = {
-            "bg": "#1e1e1e",
-            "panel": "#252526",
-            "panel_alt": "#2d2d30",
-            "fg": "#d4d4d4",
-            "muted": "#9da0a6",
-            "accent": "#0e639c",
-            "entry": "#3c3c3c",
-            "text": "#f3f3f3",
-            "plot_bg": "#1e1e1e",
-            "grid": "#3f3f46",
+            "bg": "#0a0d16",
+            "panel": "#111827",
+            "panel_alt": "#1a2235",
+            "fg": "#e5e7eb",
+            "muted": "#9ca3af",
+            "accent": "#22d3ee",
+            "accent_alt": "#a78bfa",
+            "entry": "#0f172a",
+            "text": "#f8fafc",
+            "plot_bg": "#0b1020",
+            "grid": "#25314d",
         }
         self.root.configure(bg=self.colors["bg"])
 
@@ -533,8 +534,8 @@ class App:
         style.map("TCombobox", fieldbackground=[("readonly", self.colors["entry"])], foreground=[("readonly", self.colors["text"])])
         style.configure("TCheckbutton", background=self.colors["panel"], foreground=self.colors["fg"])
         style.map("TCheckbutton", background=[("active", self.colors["panel_alt"])], foreground=[("disabled", self.colors["muted"])])
-        style.configure("TButton", background=self.colors["panel_alt"], foreground=self.colors["fg"], borderwidth=1, focuscolor=self.colors["accent"], padding=(6, 3))
-        style.map("TButton", background=[("active", self.colors["accent"]), ("pressed", "#247d53")], foreground=[("active", "#ffffff")])
+        style.configure("TButton", background=self.colors["panel_alt"], foreground=self.colors["fg"], borderwidth=1, focuscolor=self.colors["accent"], padding=(8, 5))
+        style.map("TButton", background=[("active", self.colors["accent"]), ("pressed", self.colors["accent_alt"])], foreground=[("active", "#07111f")])
 
     def build_compact_layout(self):
         main = ttk.Frame(self.root, padding=8)
@@ -549,7 +550,7 @@ class App:
         self.code_var = tk.StringVar(value="0030")
         self.chord_var = tk.StringVar(value="1000")
         self.n_side_var = tk.StringVar(value="100")
-        self.mode_var = tk.StringVar(value="Profilo piano")
+        self.mode_var = tk.StringVar(value="Flat profile")
         self.radius_var = tk.StringVar(value="5000")
         self.curvature_dir_var = tk.StringVar(value="convex")
         self.keep_developed_var = tk.BooleanVar(value=True)
@@ -586,10 +587,10 @@ class App:
         e = ttk.Entry(geom, textvariable=self.code_var, width=10)
         e.grid(row=row, column=1, sticky="ew", pady=2)
         e.bind("<KeyRelease>", self.schedule_update)
-        ttk.Label(geom, text="Modalità").grid(row=row, column=2, sticky="w", padx=(8, 4), pady=2)
+        ttk.Label(geom, text="Mode").grid(row=row, column=2, sticky="w", padx=(8, 4), pady=2)
         self.mode_map = {
-            "Profilo piano": "flat",
-            "Profilo curvato su raggio": "curved",
+            "Flat profile": "flat",
+            "Curved profile (radius)": "curved",
         }
         mode_combo = ttk.Combobox(
             geom,
@@ -604,11 +605,11 @@ class App:
         self.mode_combo = mode_combo
 
         row += 1
-        ttk.Label(geom, text="Corda [mm]").grid(row=row, column=0, sticky="w", padx=(0, 4), pady=2)
+        ttk.Label(geom, text="Chord [mm]").grid(row=row, column=0, sticky="w", padx=(0, 4), pady=2)
         e = ttk.Entry(geom, textvariable=self.chord_var, width=10)
         e.grid(row=row, column=1, sticky="ew", pady=2)
         e.bind("<KeyRelease>", self.schedule_update)
-        ttk.Label(geom, text="Punti/sem.").grid(row=row, column=2, sticky="w", padx=(8, 4), pady=2)
+        ttk.Label(geom, text="Points/side").grid(row=row, column=2, sticky="w", padx=(8, 4), pady=2)
         e = ttk.Entry(geom, textvariable=self.n_side_var, width=10)
         e.grid(row=row, column=3, sticky="ew", pady=2)
         e.bind("<KeyRelease>", self.schedule_update)
@@ -619,11 +620,11 @@ class App:
         trans.columnconfigure(3, weight=1)
 
         row = 0
-        ttk.Label(trans, text="Raggio [mm]").grid(row=row, column=0, sticky="w", padx=(0, 4), pady=2)
+        ttk.Label(trans, text="Radius [mm]").grid(row=row, column=0, sticky="w", padx=(0, 4), pady=2)
         self.radius_entry = ttk.Entry(trans, textvariable=self.radius_var, width=10)
         self.radius_entry.grid(row=row, column=1, sticky="ew", pady=2)
         self.radius_entry.bind("<KeyRelease>", self.schedule_update)
-        ttk.Label(trans, text="Curvatura").grid(row=row, column=2, sticky="w", padx=(8, 4), pady=2)
+        ttk.Label(trans, text="Curvature").grid(row=row, column=2, sticky="w", padx=(8, 4), pady=2)
         self.curv_dir_combo = ttk.Combobox(
             trans,
             textvariable=self.curvature_dir_var,
@@ -635,25 +636,25 @@ class App:
         self.curv_dir_combo.bind("<<ComboboxSelected>>", self.schedule_update)
 
         row += 1
-        ttk.Label(trans, text="Rotazione [°]").grid(row=row, column=2, sticky="w", padx=(8, 4), pady=2)
+        ttk.Label(trans, text="Rotation [°]").grid(row=row, column=2, sticky="w", padx=(8, 4), pady=2)
         e = ttk.Entry(trans, textvariable=self.angle_var, width=10)
         e.grid(row=row, column=3, sticky="ew", pady=2)
         e.bind("<KeyRelease>", self.schedule_update)
 
         row += 1
-        ttk.Label(trans, text="Decimali").grid(row=row, column=0, sticky="w", padx=(0, 4), pady=2)
+        ttk.Label(trans, text="Decimals").grid(row=row, column=0, sticky="w", padx=(0, 4), pady=2)
         e = ttk.Entry(trans, textvariable=self.decimals_var, width=10)
         e.grid(row=row, column=1, sticky="ew", pady=2)
         e.bind("<KeyRelease>", self.schedule_update)
         ttk.Checkbutton(
             trans,
-            text="Specchio asse X",
+            text="Mirror X axis",
             variable=self.mirror_x_var,
             command=self.update_preview,
         ).grid(row=row, column=2, sticky="w", padx=(8, 4), pady=2)
         ttk.Checkbutton(
             trans,
-            text="Specchio asse Y",
+            text="Mirror Y axis",
             variable=self.mirror_y_var,
             command=self.update_preview,
         ).grid(row=row, column=3, sticky="w", pady=2)
@@ -666,13 +667,13 @@ class App:
         arow = 0
         ttk.Checkbutton(
             aero,
-            text="Usa libreria interna NACA",
+            text="Use internal NACA library",
             variable=self.use_internal_aero_var,
             command=self.update_preview,
         ).grid(row=arow, column=0, columnspan=4, sticky="w", pady=2)
 
         arow += 1
-        ttk.Label(aero, text="Fluido").grid(row=arow, column=0, sticky="w", padx=(0, 4), pady=2)
+        ttk.Label(aero, text="Fluid").grid(row=arow, column=0, sticky="w", padx=(0, 4), pady=2)
         self.fluid_combo = ttk.Combobox(
             aero,
             textvariable=self.fluid_var,
@@ -682,13 +683,13 @@ class App:
         )
         self.fluid_combo.grid(row=arow, column=1, sticky="ew", pady=2)
         self.fluid_combo.bind("<<ComboboxSelected>>", self.on_fluid_changed)
-        ttk.Label(aero, text="Velocità [km/h]").grid(row=arow, column=2, sticky="w", padx=(8, 4), pady=2)
+        ttk.Label(aero, text="Velocity [km/h]").grid(row=arow, column=2, sticky="w", padx=(8, 4), pady=2)
         e = ttk.Entry(aero, textvariable=self.velocity_var, width=10)
         e.grid(row=arow, column=3, sticky="ew", pady=2)
         e.bind("<KeyRelease>", self.schedule_update)
 
         arow += 1
-        ttk.Label(aero, text="Corda aero [mm]").grid(row=arow, column=0, sticky="w", padx=(0, 4), pady=2)
+        ttk.Label(aero, text="Aero chord [mm]").grid(row=arow, column=0, sticky="w", padx=(0, 4), pady=2)
         e = ttk.Entry(aero, textvariable=self.aero_chord_var, width=10)
         e.grid(row=arow, column=1, sticky="ew", pady=2)
         e.bind("<KeyRelease>", self.schedule_update)
@@ -698,17 +699,17 @@ class App:
         e.bind("<KeyRelease>", self.schedule_update)
 
         arow += 1
-        ttk.Label(aero, text="Angolo α [°]").grid(row=arow, column=2, sticky="w", padx=(8, 4), pady=2)
+        ttk.Label(aero, text="Angle α [°]").grid(row=arow, column=2, sticky="w", padx=(8, 4), pady=2)
         e = ttk.Entry(aero, textvariable=self.alpha_attack_var, width=10)
         e.grid(row=arow, column=3, sticky="ew", pady=2)
         e.bind("<KeyRelease>", self.schedule_update)
 
         arow += 1
-        ttk.Label(aero, text="Densità [kg/m³]").grid(row=arow, column=0, sticky="w", padx=(0, 4), pady=2)
+        ttk.Label(aero, text="Density [kg/m³]").grid(row=arow, column=0, sticky="w", padx=(0, 4), pady=2)
         self.density_entry = ttk.Entry(aero, textvariable=self.density_var, width=10)
         self.density_entry.grid(row=arow, column=1, sticky="ew", pady=2)
         self.density_entry.bind("<KeyRelease>", self.schedule_update)
-        ttk.Label(aero, text="Viscosità [Pa·s]").grid(row=arow, column=2, sticky="w", padx=(8, 4), pady=2)
+        ttk.Label(aero, text="Viscosity [Pa·s]").grid(row=arow, column=2, sticky="w", padx=(8, 4), pady=2)
         self.viscosity_entry = ttk.Entry(aero, textvariable=self.viscosity_var, width=10)
         self.viscosity_entry.grid(row=arow, column=3, sticky="ew", pady=2)
         self.viscosity_entry.bind("<KeyRelease>", self.schedule_update)
@@ -759,25 +760,25 @@ class App:
         actions.pack(fill="x", pady=(6, 0))
         actions.columnconfigure(0, weight=1)
         actions.columnconfigure(1, weight=1)
-        ttk.Button(actions, text="Aggiorna", command=self.update_preview).grid(row=0, column=0, sticky="ew", padx=(0, 4), pady=2)
-        ttk.Button(actions, text="Salva .pts", command=self.save_pts).grid(row=0, column=1, sticky="ew", pady=2)
-        ttk.Button(actions, text="Salva .dxf", command=self.save_dxf).grid(row=1, column=0, sticky="ew", padx=(0, 4), pady=2)
-        ttk.Button(actions, text="Copia anteprima", command=self.copy_preview).grid(row=1, column=1, sticky="ew", pady=2)
+        ttk.Button(actions, text="Update", command=self.update_preview).grid(row=0, column=0, sticky="ew", padx=(0, 4), pady=2)
+        ttk.Button(actions, text="Save .pts", command=self.save_pts).grid(row=0, column=1, sticky="ew", pady=2)
+        ttk.Button(actions, text="Save .dxf", command=self.save_dxf).grid(row=1, column=0, sticky="ew", padx=(0, 4), pady=2)
+        ttk.Button(actions, text="Copy preview", command=self.copy_preview).grid(row=1, column=1, sticky="ew", pady=2)
 
-        note = ttk.LabelFrame(left, text="Istruzioni operative", padding=8)
+        note = ttk.LabelFrame(left, text="Quick workflow", padding=8)
         note.pack(fill="x", pady=(6, 0))
         ttk.Label(
             note,
             text=(
-                "1) Inserisci NACA e parametri principali.\n"
-                "2) Controlla grafico live e valori aero.\n"
-                "3) Salva .pts o .dxf dai pulsanti Actions.\n"
-                "4) Usa 'Copia anteprima' per esportare rapido."
+                "1) Enter NACA code and main parameters.\n"
+                "2) Check live plot and aero values.\n"
+                "3) Save .pts or .dxf from Actions.\n"
+                "4) Use 'Copy preview' for quick export."
             ),
             justify="left",
         ).pack(anchor="w")
 
-        graph_frame = ttk.LabelFrame(right, text="Grafico profilo (live)", padding=6)
+        graph_frame = ttk.LabelFrame(right, text="Airfoil plot (live)", padding=6)
         graph_frame.pack(fill="both", expand=True)
 
         self.figure = Figure(figsize=(7, 4.8), dpi=100)
@@ -787,12 +788,25 @@ class App:
         self.canvas = FigureCanvasTkAgg(self.figure, master=graph_frame)
         self.canvas.get_tk_widget().pack(fill="both", expand=True)
 
-        preview_frame = ttk.LabelFrame(right, text="Anteprima .pts", padding=6)
+        kpi_frame = ttk.LabelFrame(right, text="Flight KPIs", padding=8)
+        kpi_frame.pack(fill="x", expand=False, pady=(8, 0))
+        kpi_frame.columnconfigure(1, weight=1)
+        kpi_frame.columnconfigure(3, weight=1)
+        kpi_frame.columnconfigure(5, weight=1)
+
+        ttk.Label(kpi_frame, text="Lift [kg]").grid(row=0, column=0, sticky="w")
+        ttk.Label(kpi_frame, textvariable=self.lift_out_var, foreground=self.colors["accent"]).grid(row=0, column=1, sticky="w", padx=(4, 12))
+        ttk.Label(kpi_frame, text="Drag [kg]").grid(row=0, column=2, sticky="w")
+        ttk.Label(kpi_frame, textvariable=self.drag_out_var, foreground=self.colors["accent_alt"]).grid(row=0, column=3, sticky="w", padx=(4, 12))
+        ttk.Label(kpi_frame, text="L/D [-]").grid(row=0, column=4, sticky="w")
+        ttk.Label(kpi_frame, textvariable=self.ld_out_var).grid(row=0, column=5, sticky="w", padx=(4, 0))
+
+        preview_frame = ttk.LabelFrame(right, text=".pts preview", padding=6)
         preview_frame.pack(fill="x", expand=False, pady=(8, 0))
 
         summary = ttk.Frame(preview_frame)
         summary.pack(fill="x", pady=(0, 4))
-        summary_labels = [("Re [-]", self.reynolds_out_var), ("CL [-]", self.cl_out_var), ("CD [-]", self.cd_out_var), ("Lift [kg]", self.lift_out_var), ("Drag [kg]", self.drag_out_var), ("L/D [-]", self.ld_out_var)]
+        summary_labels = [("Re [-]", self.reynolds_out_var), ("CL [-]", self.cl_out_var), ("CD [-]", self.cd_out_var)]
         for idx, (lbl, var) in enumerate(summary_labels):
             col = idx * 2
             summary.columnconfigure(col + 1, weight=1)
@@ -894,9 +908,9 @@ class App:
 
         area = chord * span
         if velocity <= 0:
-            raise ValueError("La velocità deve essere maggiore di zero.")
+            raise ValueError("Velocity must be greater than zero.")
         if span <= 0:
-            raise ValueError("Lo span deve essere maggiore di zero.")
+            raise ValueError("Span must be greater than zero.")
 
         reynolds = compute_reynolds(velocity, chord, density, viscosity)
         overrides = {
@@ -944,20 +958,20 @@ class App:
         decimals = int(self.decimals_var.get())
 
         if chord <= 0:
-            raise ValueError("La corda deve essere maggiore di zero.")
+            raise ValueError("Chord must be greater than zero.")
         if n_side < 2:
-            raise ValueError("I punti per semiprofilo devono essere almeno 2.")
+            raise ValueError("Points per side must be at least 2.")
         if decimals < 0 or decimals > 12:
-            raise ValueError("I decimali devono essere compresi tra 0 e 12.")
+            raise ValueError("Decimals must be between 0 and 12.")
         if mode not in {"flat", "curved"}:
-            raise ValueError("Modalità non valida.")
+            raise ValueError("Invalid mode.")
 
         radius = None
         if mode == "curved":
             radius_mm = float(self.radius_var.get().replace(",", "."))
             radius = radius_mm / 1000.0
             if radius <= 0:
-                raise ValueError("Il raggio di curvatura deve essere maggiore di zero.")
+                raise ValueError("Curvature radius must be greater than zero.")
 
         curvature_dir = self.curvature_dir_var.get().strip().lower()
         if curvature_dir not in {"convex", "concave"}:
@@ -1008,10 +1022,11 @@ class App:
         self.ax.set_facecolor(self.colors["plot_bg"])
         x_mm = np.array(x) * 1000.0
         y_mm = np.array(y) * 1000.0
-        self.ax.plot(x_mm, y_mm, marker=".", markersize=2, linewidth=1.0)
+        line_color = self.colors["accent"]
+        self.ax.plot(x_mm, y_mm, marker=".", markersize=2, linewidth=1.3, color=line_color)
 
-        mode_txt = "Profilo piano" if vals["mode"] == "flat" else "Profilo curvato"
-        title = f"NACA {vals['code']} | corda={vals['chord'] * 1000:.1f} mm | {mode_txt}"
+        mode_txt = "Flat profile" if vals["mode"] == "flat" else "Curved profile"
+        title = f"NACA {vals['code']} | chord={vals['chord'] * 1000:.1f} mm | {mode_txt}"
         if vals["mode"] == "curved":
             title += f" | R={vals['radius'] * 1000:.1f} mm"
         if vals["angle_deg"]:
@@ -1020,7 +1035,7 @@ class App:
         self.ax.set_title(title)
         self.ax.set_xlabel("X [mm]")
         self.ax.set_ylabel("Y [mm]")
-        self.ax.grid(True, color=self.colors["grid"], alpha=0.5)
+        self.ax.grid(True, color=self.colors["grid"], alpha=0.7, linestyle="--", linewidth=0.6)
         self.ax.set_aspect("equal", adjustable="box")
         self.ax.tick_params(colors=self.colors["fg"])
         self.ax.xaxis.label.set_color(self.colors["fg"])
@@ -1057,10 +1072,10 @@ class App:
 
             default_name = f"NACA{vals['code']}.pts"
             path = filedialog.asksaveasfilename(
-                title="Salva file .pts",
+                title="Save .pts file",
                 defaultextension=".pts",
                 initialfile=default_name,
-                filetypes=[("PTS files", "*.pts"), ("Tutti i file", "*.*")],
+                filetypes=[("PTS files", "*.pts"), ("All files", "*.*")],
             )
             if not path:
                 return
@@ -1068,9 +1083,9 @@ class App:
             with open(path, "w", encoding="utf-8", newline="\n") as f:
                 f.write(pts_text)
 
-            messagebox.showinfo("Salvato", f"File salvato correttamente:\n{path}")
+            messagebox.showinfo("Saved", f"File saved successfully:\n{path}")
         except Exception as e:
-            messagebox.showerror("Errore", str(e))
+            messagebox.showerror("Error", str(e))
 
     def save_dxf(self):
         try:
@@ -1079,25 +1094,25 @@ class App:
 
             default_name = f"NACA{vals['code']}.dxf"
             path = filedialog.asksaveasfilename(
-                title="Salva file .dxf",
+                title="Save .dxf file",
                 defaultextension=".dxf",
                 initialfile=default_name,
-                filetypes=[("DXF files", "*.dxf"), ("Tutti i file", "*.*")],
+                filetypes=[("DXF files", "*.dxf"), ("All files", "*.*")],
             )
             if not path:
                 return
 
             write_dxf_polyline(path, x, y)
-            messagebox.showinfo("Salvato", f"DXF salvato correttamente:\n{path}")
+            messagebox.showinfo("Saved", f"DXF saved successfully:\n{path}")
         except Exception as e:
-            messagebox.showerror("Errore", str(e))
+            messagebox.showerror("Error", str(e))
 
     def copy_preview(self):
         txt = self.text.get("1.0", "end-1c")
         self.root.clipboard_clear()
         self.root.clipboard_append(txt)
         self.root.update()
-        messagebox.showinfo("Copiato", "Anteprima copiata negli appunti.")
+        messagebox.showinfo("Copied", "Preview copied to clipboard.")
 
 
 def main():
