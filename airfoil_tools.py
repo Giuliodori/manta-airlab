@@ -562,7 +562,7 @@ class App:
             self.logo_image = None
             return
 
-        target_width = 180
+        target_width = 36
         if logo_image.width() > target_width:
             downsample = max(1, math.ceil(logo_image.width() / target_width))
             logo_image = logo_image.subsample(downsample, downsample)
