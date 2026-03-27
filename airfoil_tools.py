@@ -605,7 +605,7 @@ class App:
         right = ttk.Frame(main)
         right.pack(side="left", fill="both", expand=True)
 
-        self.build_logo_header(left)
+        # Logo moved inside Aerodynamics panel (bottom-right under overrides)
 
         self.code_var = tk.StringVar(value="2412")
         self.chord_var = tk.StringVar(value="100")
@@ -793,6 +793,25 @@ class App:
         e = ttk.Entry(aero, textvariable=self.override_alpha0_var, width=10)
         e.grid(row=arow, column=3, sticky="ew", pady=2)
         e.bind("<KeyRelease>", self.schedule_update)
+
+        arow += 1
+        logo_path = os.path.join("images", "logo_airfoil_tools.png")
+        if os.path.exists(logo_path):
+            try:
+                logo_image = tk.PhotoImage(file=logo_path)
+                target_width = 72
+                if logo_image.width() > target_width:
+                    downsample = max(1, math.ceil(logo_image.width() / target_width))
+                    logo_image = logo_image.subsample(downsample, downsample)
+                self.logo_image = logo_image
+                ttk.Label(aero, image=self.logo_image).grid(
+                    row=arow,
+                    column=3,
+                    sticky="e",
+                    pady=(2, 4),
+                )
+            except Exception:
+                self.logo_image = None
 
         arow += 1
         ttk.Separator(aero, orient="horizontal").grid(row=arow, column=0, columnspan=4, sticky="ew", pady=3)
