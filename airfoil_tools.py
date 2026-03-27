@@ -4,6 +4,7 @@
 # See LICENSE and COMMERCIAL-LICENSE.md for details.
 
 import math
+import os
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
@@ -488,6 +489,8 @@ class App:
         self.root = root
         self.root.title("NACA 4-Digit Generator -> .pts + .dxf with live plot")
         self.root.geometry("1180x730")
+        self.logo_image = None
+        self.set_window_icon()
         self.setup_dark_theme()
 
         self._update_job = None
@@ -502,19 +505,28 @@ class App:
         self.update_fluid_fields()
         self.update_preview()
 
+    def set_window_icon(self):
+        icon_path = os.path.join("images", "ico.ico")
+        if not os.path.exists(icon_path):
+            return
+        try:
+            self.root.iconbitmap(icon_path)
+        except Exception:
+            pass
+
     def setup_dark_theme(self):
         self.colors = {
-            "bg": "#0a0d16",
-            "panel": "#111827",
-            "panel_alt": "#1a2235",
-            "fg": "#e5e7eb",
-            "muted": "#9ca3af",
-            "accent": "#22d3ee",
-            "accent_alt": "#a78bfa",
-            "entry": "#0f172a",
-            "text": "#f8fafc",
-            "plot_bg": "#0b1020",
-            "grid": "#25314d",
+            "bg": "#070b12",
+            "panel": "#0e1726",
+            "panel_alt": "#17253a",
+            "fg": "#e6edf8",
+            "muted": "#92a4bf",
+            "accent": "#30d5f3",
+            "accent_alt": "#5ea2ff",
+            "entry": "#101a2b",
+            "text": "#f5f9ff",
+            "plot_bg": "#091323",
+            "grid": "#28466e",
         }
         self.root.configure(bg=self.colors["bg"])
 
@@ -537,6 +549,20 @@ class App:
         style.configure("TButton", background=self.colors["panel_alt"], foreground=self.colors["fg"], borderwidth=1, focuscolor=self.colors["accent"], padding=(8, 5))
         style.map("TButton", background=[("active", self.colors["accent"]), ("pressed", self.colors["accent_alt"])], foreground=[("active", "#07111f")])
 
+    def build_logo_header(self, parent):
+        logo_path = os.path.join("images", "logo_airfoil_tools.png")
+        if not os.path.exists(logo_path):
+            return
+        try:
+            self.logo_image = tk.PhotoImage(file=logo_path)
+        except Exception:
+            self.logo_image = None
+            return
+
+        logo_box = ttk.Frame(parent)
+        logo_box.pack(fill="x", pady=(0, 6))
+        ttk.Label(logo_box, image=self.logo_image).pack(anchor="w")
+
     def build_compact_layout(self):
         main = ttk.Frame(self.root, padding=8)
         main.pack(fill="both", expand=True)
@@ -546,6 +572,8 @@ class App:
 
         right = ttk.Frame(main)
         right.pack(side="left", fill="both", expand=True)
+
+        self.build_logo_header(left)
 
         self.code_var = tk.StringVar(value="0030")
         self.chord_var = tk.StringVar(value="1000")
