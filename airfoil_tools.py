@@ -470,7 +470,7 @@ def write_pts_text(x, y, decimals: int = 6):
 
 
 def write_dxf_polyline(path: str, x, y, layer: str = "AIRFOIL"):
-    """Esporta contorno chiuso come LWPOLYLINE 2D nel piano XY."""
+    """Export a closed contour as a 2D LWPOLYLINE on the XY plane."""
     try:
         import ezdxf
     except ImportError as exc:
@@ -1124,7 +1124,7 @@ class App:
         right_panes.pack(fill="both", expand=True)
         self.right_panes = right_panes
 
-        graph_frame = ttk.LabelFrame(right_panes, text="Airfoil plot (live)", padding=8)
+        graph_frame = ttk.LabelFrame(right_panes, text="Profile plot (live)", padding=8)
         bottom_frame = ttk.Frame(right_panes)
         right_panes.add(graph_frame, weight=4)
         right_panes.add(bottom_frame, weight=1)

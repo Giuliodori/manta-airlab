@@ -2,67 +2,83 @@
 
 [![Latest Release](https://img.shields.io/github/v/release/giuliodori/airfoil-tools)](https://github.com/giuliodori/airfoil-tools/releases/latest)
 
+Airfoil Tools is a desktop GUI to generate 4-digit NACA profiles, a classic aerodynamic family used in wings, hydrofoils, and lifting surfaces.
+Fast export to `.pts` and `.dxf`, plus a quick estimate of `lift` and `drag` in a few steps.
 
-Airfoil Tools e' una GUI desktop per generare profili NACA a 4 cifre, classico profilo dell'aerodinamica usato in ali, idrofoil e superfici portanti. Esporta in `.pts` e `.dxf` e stima `lift` e `drag`.
-
-![gui](images/gui.png)
-![Manta](images/manta.jpg)
-
-## Installazione semplice (exe consigliato)
-
-Per la maggior parte degli utenti e' sufficiente l'eseguibile.
-
-### 1) Download
-
-Scarica la cartella con l'eseguibile da GitHub:
+Download the latest release exe:
 
 ```text
 https://github.com/giuliodori/airfoil-tools/releases/latest
 ```
 
-Se hai clonato o scaricato lo ZIP del repository, il file principale su Windows e':
+## Why it is useful
+
+When you need a 4-digit NACA profile ready for CAD or simulation, starting from scratch takes time and the tools are not immediate.
+
+Between calculations, formats, and different tools, the path from idea to a usable profile slows the project and adds friction.
+
+Airfoil Tools keeps it all in one GUI: generate the profile, export to `.pts` or `.dxf`, and get a quick `lift` and `drag` estimate (not CFD).
+
+## What you get right away
+
+- Instant generation of 4-digit NACA profiles
+- Quick export to `.pts` and `.dxf`
+- `lift` and `drag` estimates in the same flow
+
+![gui](images/gui.png)
+![Manta](images/manta.jpg)
+
+## Easy install (exe recommended)
+
+For most users, the executable is enough.
+
+### 1) Download
+
+Download the exe from the latest release.
+
+If you cloned or downloaded the repository ZIP, the main Windows file is:
 - `airfoil-tools\dist\airfoil-tools.exe`
 
-### 2) Avvio
+### 2) Run
 
-- Fai doppio click su `airfoil-tools\dist\airfoil-tools.exe`.
-- La GUI si apre e puoi subito generare ed esportare i profili.
+- Double-click `airfoil-tools\dist\airfoil-tools.exe`.
+- The GUI opens and you can generate and export profiles immediately.
 
-Avvio rapido alternativo dalla cartella del repository:
-- Doppio click su `airfoil-tools.bat`
+Alternative quick start from the repository folder:
+- Double-click `airfoil-tools.bat`
 
-## Codice sorgente Python (opzionale)
+## Python source (optional)
 
-Usa questa sezione solo se vuoi eseguire da sorgente.
+Use this section only if you want to run from source.
 
-### Requisiti (solo sorgente)
+### Requirements (source only)
 
 - Python 3.10+
 - `numpy`
 - `matplotlib`
-- `ezdxf` (necessario per l'export `.dxf`)
+- `ezdxf` (required for `.dxf` export)
 
-Installa le dipendenze:
+Install dependencies:
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-Installazione automatica: se mancano `numpy` o `matplotlib` l'app lo segnala all'avvio e propone
-l'installazione automatica. Se manca `ezdxf`, l'app propone l'installazione al momento del salvataggio `.dxf`.
+Auto-install: if `numpy` or `matplotlib` are missing, the app will prompt you at launch.
+If `ezdxf` is missing, the app will prompt you when saving `.dxf`.
 
-Esegui:
+Run:
 
 ```bash
 python airfoil_tools.py
 ```
 
-Su Windows puoi anche usare:
+On Windows you can also use:
 - `airfoil-tools.bat`
 
-## Esempi di CAD per `.pts` e `.dxf`
+## CAD examples for `.pts` and `.dxf`
 
-### CAD/3D con supporto DXF
+### CAD/3D with DXF support
 
 - AutoCAD
 - CREO Parametric
@@ -75,120 +91,73 @@ Su Windows puoi anche usare:
 - DraftSight
 - QCAD
 - LibreCAD
-- Onshape (workflow DXF)
+- Onshape (DXF workflow)
 
-### Software per file di punti (`.pts`/XYZ)
+### Point cloud / `.pts` (XYZ) tools
 
 - CloudCompare
 - MeshLab
 - MATLAB
 - GNU Octave
 - Python (NumPy / Pandas)
-- CATIA (import punti)
-- Siemens NX (import punti)
+- CATIA (point import)
+- Siemens NX (point import)
 - Autodesk Alias (point set)
 
-## La storia dei profili NACA: il "LEGO" dell'aerodinamica
+## A short history of NACA profiles: the "LEGO" of aerodynamics
 
-Se stai progettando un'ala che deve sollevare un aereo, un idrofoil o un alettone che deve tenere incollata a terra una Formula 1, prima o poi ti imbatterai in quattro lettere fondamentali: `NACA`.
+If you are designing a wing to lift an aircraft, a hydrofoil, or a racing car wing, you will eventually run into four key letters: `NACA`.
 
-I profili NACA sono diventati un riferimento storico perche' hanno portato ordine in un campo che, nei primi decenni dell'aviazione, era spesso guidato da tentativi, esperienza pratica e molte prove in galleria del vento. Tra la fine degli anni '20 e l'inizio degli anni '30, la National Advisory Committee for Aeronautics sviluppo' un sistema semplice ma potentissimo: descrivere la forma del profilo con una sigla numerica, invece di affidarsi solo a nomi o disegni.
+In the late 1920s and early 1930s, the National Advisory Committee for Aeronautics introduced a simple, powerful system: describe profile shapes with a numeric code. This brought order to a field driven by trial and error and made profiles comparable and reusable.
 
-### 1) Com'e' nato tutto: ordine nel caos
+The 4-digit series is still widely used for preliminary design and prototypes. For example, `NACA 2412` means 2% max camber at 40% of the chord and 12% thickness.
 
-Prima degli anni '30, scegliere un profilo alare era molto meno standardizzato. La NACA introdusse famiglie di profili codificate e pubblicate in cataloghi tecnici, cosi' gli ingegneri poterono finalmente selezionare una geometria in modo ripetibile, confrontabile e documentato. In pratica, fu come passare da prototipi artigianali a componenti di libreria.
+Over time, more advanced families appeared (laminar series and supercritical profiles) to reduce drag at higher speeds. Classic NACA profiles remain a practical reference for wings, hydrofoils, control surfaces, and low-drag cooling ducts.
 
-### 2) La serie a 4 cifre: il pane quotidiano dei maker
+They are useful for designers and makers because they:
 
-La serie NACA a 4 cifre e' la piu' famosa ed e' ancora oggi una delle piu' facili da capire e usare.
+- come with decades of experimental data
+- are easy to describe, generate, and compare
+- let you start from a known geometry before CFD or advanced testing
 
-Prendiamo `NACA 2412`:
+`airfoil-tools` exists for this reason: take a known geometry and make it immediately usable, with `.pts`/`.dxf` export and a quick `lift` and `drag` estimate.
 
-- `2`: curvatura massima pari al 2% della corda
-- `4`: posizione della curvatura massima al 40% della corda
-- `12`: spessore massimo pari al 12% della corda
+## Notes on 4-digit NACA profiles
 
-Questa codifica semplice rende i profili NACA molto pratici per modellismo, studio preliminare, stampa 3D, taglio CNC e primi dimensionamenti. Il `NACA 0012`, per esempio, e' simmetrico ed e' un classico per piani di coda, timoni, appendici e test sperimentali.
+4-digit NACA profiles are a historic family described by four numbers that encode geometry in a simple, repeatable way. They remain a solid reference for preliminary design, education, and quick comparisons.
 
-### 3) La caccia alla velocita': la serie 6
+### Digit meaning
 
-Negli anni '40, con l'aumento delle velocita', l'attenzione si sposto' sempre di piu' sulla resistenza aerodinamica. Da qui nacquero le serie laminate, come la Serie 6, progettate per favorire un flusso piu' regolare e ridurre la resistenza in specifici intervalli di funzionamento.
+The four digits are `M P TT`:
 
-Un caso celebre e' il `P-51 Mustang`, spesso associato alla famiglia di profili laminari NACA: una parte importante delle sue prestazioni ad alta velocita' e della sua autonomia dipendeva anche da queste scelte aerodinamiche.
+- `M` (first digit) is maximum camber as a percentage of chord.
+- `P` (second digit) is the position of max camber in tenths of chord.
+- `TT` (last two digits) is maximum thickness as a percentage of chord.
 
-### 4) Non solo ali: F1, MotoGP e condotti NACA
+Example:
 
-I profili NACA non sono utili solo in aeronautica.
+`NACA 2412` means 2% max camber at 40% chord, 12% thickness.
 
-- I profili simmetrici, come `NACA 0012`, sono adatti anche ad alettoni, pinne e superfici che devono generare carico aerodinamico con comportamento pulito e prevedibile.
-- I `NACA ducts`, le prese d'aria incassate a bassa resistenza, sono ancora oggi usati in auto sportive, moto da corsa e applicazioni tecniche dove serve raffreddamento con minimo disturbo aerodinamico.
+### How to read them quickly and where they are used
 
-### 5) L'evoluzione moderna: profili supercritici
+Symmetric profiles (zero camber) for applications where you need symmetric behavior:
 
-Con l'arrivo dei velivoli ad alte prestazioni e del trasporto commerciale moderno, la ricerca si e' spostata verso profili piu' sofisticati, come i supercritici, ottimizzati per ritardare gli effetti compressibili e migliorare l'efficienza vicino ai regimi transonici.
+- `NACA 0012` and `NACA 0015` for tail surfaces, rudders, and general profiles.
 
-Questo non rende obsoleti i profili NACA classici: al contrario, li rende ancora piu' preziosi come base di studio, confronto e progettazione preliminare.
+Profiles with moderate camber for wings and small aircraft:
 
-### Perche' usarli ancora oggi
+- `NACA 2412` and `NACA 4412` for light wings and general applications needing good lift.
 
-Per un progettista, un maker o chi sta sviluppando un primo concetto aerodinamico, i profili NACA restano una garanzia:
+Thicker profiles for structural robustness or lower Reynolds numbers:
 
-- hanno decenni di dati sperimentali alle spalle
-- sono facili da descrivere, generare e confrontare
-- permettono di partire da una geometria nota prima di passare a CFD o test piu' avanzati
+- `NACA 0018` and `NACA 4418` for structures with thickness constraints or lower Reynolds.
 
-Se usi un `NACA 4412`, per esempio, non stai partendo da una forma arbitraria: stai usando un riferimento storico ben documentato, utile per ottenere un primo dimensionamento credibile gia' nelle fasi iniziali del progetto.
+## License
 
-### Perche' questo tool e' utile
+This project is released under a dual license:
 
-`airfoil-tools` nasce proprio per questo: prendere una geometria nota e renderla subito utilizzabile.
+- GNU General Public License v3.0 (GPL-3.0-only) for open-source use
+- Commercial license for proprietary or closed-source use
 
-Con pochi passaggi puoi:
-
-- generare il profilo
-- esportarlo in formati semplici per CAD e modellazione
-- ottenere una stima immediata di `lift` e `drag`
-
-Questo riduce il tempo necessario per passare dall'idea a un primo modello tecnico, lasciando piu' spazio alla verifica, all'iterazione e alla costruzione.
-
-## Note sui profili NACA 4 cifre
-
-I profili NACA a 4 cifre sono una famiglia storica di profili alari descritta da quattro numeri che codificano la geometria in modo semplice e riproducibile. Restano un riferimento solido per studio preliminare, didattica e comparazioni rapide: sono facili da comunicare, da generare e da confrontare.
-
-### Significato delle cifre
-
-Le quattro cifre sono `M P TT`:
-
-- `M` (prima cifra) e' il massimo camber in percentuale della corda.
-- `P` (seconda cifra) e' la posizione del massimo camber in decimi di corda.
-- `TT` (ultime due cifre) e' lo spessore massimo in percentuale della corda.
-
-Esempio:
-
-`NACA 2412` significa camber massimo 2% a 40% di corda, spessore 12%.
-
-
-
-### Come si leggono al volo e dove si usano
-
-Profili simmetrici (camber zero) per applicazioni dove serve comportamento simmetrico:
-
-- `NACA 0012` e `NACA 0015` per superfici di coda, timoni e profili generici.
-
-Profili con camber moderato per ali e piccoli velivoli:
-
-- `NACA 2412` e `NACA 4412` per ali leggere e applicazioni generiche dove serve buona portanza.
-
-Profili piu' spessi per robustezza strutturale o basse velocita':
-
-- `NACA 0018` e `NACA 4418` per strutture con vincoli di spessore o Reynolds piu' bassi.
-
-## Licenza
-
-Questo progetto e' rilasciato con doppia licenza:
-
-- GNU General Public License v3.0 (GPL-3.0-only) per uso open-source
-- Licenza commerciale per uso proprietario o closed-source
-
-Per licenze commerciali:
+For commercial licenses:
 - info@duilio.cc
