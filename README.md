@@ -45,8 +45,11 @@ Usa questa sezione solo se vuoi eseguire da sorgente.
 Installa le dipendenze:
 
 ```bash
-python -m pip install numpy matplotlib ezdxf
+python -m pip install -r requirements.txt
 ```
+
+Installazione automatica: se mancano `numpy` o `matplotlib` l'app lo segnala all'avvio e propone
+l'installazione automatica. Se manca `ezdxf`, l'app propone l'installazione al momento del salvataggio `.dxf`.
 
 Esegui:
 

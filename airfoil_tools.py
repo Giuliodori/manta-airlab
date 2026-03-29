@@ -3,16 +3,29 @@
 # This file is part of Airfoil Tools.
 # See LICENSE and COMMERCIAL-LICENSE.md for details.
 
+import importlib
 import math
 import os
+import subprocess
+import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-import numpy as np
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
+try:
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    from matplotlib.figure import Figure
+    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+except ImportError:
+    FigureCanvasTkAgg = None
+    Figure = None
+    Poly3DCollection = None
+
 from airfoil_library import get_airfoil_parameters
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 
 FLUID_PRESETS = {
@@ -20,6 +33,79 @@ FLUID_PRESETS = {
     "water": {"rho": 997.0, "mu": 8.9e-4},
     "salt water": {"rho": 1025.0, "mu": 1.08e-3},
 }
+
+
+def _prompt_install(packages, context=""):
+    pkg_list = ", ".join(packages)
+    header = "Install dependencies"
+    extra = f"\n\n{context}" if context else ""
+    msg = f"Missing dependencies: {pkg_list}.\nInstall now?{extra}"
+    try:
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            return messagebox.askyesno(header, msg)
+        finally:
+            root.destroy()
+    except Exception:
+        resp = input(f"{msg} [y/N]: ")
+        return resp.strip().lower().startswith("y")
+
+
+def _run_pip_install(packages):
+    cmd = [sys.executable, "-m", "pip", "install", *packages]
+    try:
+        completed = subprocess.run(cmd, check=False)
+    except Exception:
+        return False
+    return completed.returncode == 0
+
+
+def _load_plotting_deps():
+    global np, FigureCanvasTkAgg, Figure, Poly3DCollection
+    if np is None:
+        np = importlib.import_module("numpy")
+    if FigureCanvasTkAgg is None or Figure is None or Poly3DCollection is None:
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg as _FigureCanvasTkAgg
+        from matplotlib.figure import Figure as _Figure
+        from mpl_toolkits.mplot3d.art3d import Poly3DCollection as _Poly3DCollection
+
+        FigureCanvasTkAgg = _FigureCanvasTkAgg
+        Figure = _Figure
+        Poly3DCollection = _Poly3DCollection
+
+
+def ensure_required_deps():
+    required = []
+    if np is None:
+        required.append("numpy")
+    if FigureCanvasTkAgg is None or Figure is None or Poly3DCollection is None:
+        required.append("matplotlib")
+
+    if not required:
+        return True
+
+    if not _prompt_install(required, context="The app cannot start without these packages."):
+        return False
+
+    if not _run_pip_install(required):
+        messagebox.showerror(
+            "Install failed",
+            "Unable to install required packages. Please install them manually "
+            "and restart the app.",
+        )
+        return False
+
+    try:
+        _load_plotting_deps()
+    except Exception:
+        messagebox.showerror(
+            "Install failed",
+            "Packages were installed but could not be imported. Please restart the app.",
+        )
+        return False
+
+    return True
 
 
 
@@ -388,9 +474,22 @@ def write_dxf_polyline(path: str, x, y, layer: str = "AIRFOIL"):
     try:
         import ezdxf
     except ImportError as exc:
-        raise RuntimeError(
-            "Library 'ezdxf' is not installed. Install with: pip install ezdxf"
-        ) from exc
+        if _prompt_install(["ezdxf"], context="Needed to export DXF files."):
+            if _run_pip_install(["ezdxf"]):
+                try:
+                    import ezdxf  # type: ignore
+                except Exception as err:
+                    raise RuntimeError(
+                        "Library 'ezdxf' was installed but could not be imported."
+                    ) from err
+            else:
+                raise RuntimeError(
+                    "Unable to install 'ezdxf'. Please install it manually and retry."
+                ) from exc
+        else:
+            raise RuntimeError(
+                "Library 'ezdxf' is not installed. Install with: pip install ezdxf"
+            ) from exc
 
     x, y = close_profile(x, y)
 
@@ -1634,7 +1733,7 @@ class App:
                 lift_len = arrow_ref * (abs(aero["lift"]) / force_ref)
                 drag_len = arrow_ref * (abs(aero["drag"]) / force_ref)
                 lift_tip_y = y_center + (lift_len if aero["lift"] >= 0 else -lift_len)
-                drag_x0 = x_center - span_ref * 0.10
+                drag_x0 = x_center - span_ref * 0.18
                 drag_tip_x = drag_x0 + drag_len
 
                 self.ax.annotate(
@@ -1849,6 +1948,8 @@ class App:
 
 
 def main():
+    if not ensure_required_deps():
+        return
     root = tk.Tk()
     try:
         style = ttk.Style()
