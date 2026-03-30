@@ -32,13 +32,13 @@ Each run also refreshes:
 - `naca4415_nlr_re1p01e6_case.json`: NACA 4415 clean data from the NLR/OSU package at Reynolds about 1.01 million.
 - `naca4415_nlr_re1p26e6_case.json`: NACA 4415 clean data from the NLR/OSU package at Reynolds about 1.26 million.
 - `naca4418r_nasa_re3p24e6_case.json`: high-thickness NACA 4418R conservatively reconstructed from NACA-WR-L-451 Figure 4 and Table I at Reynolds about 3.24 million.
-- `clarky_case.json`: low-Re Clark-Y drag-polar points from UIUC LSAT Vol. 3, compared against a NACA 2412 proxy because the app currently supports only NACA 4-digit analysis.
+- `clarky_case.json`: auxiliary low-Re Clark-Y drag-polar points from UIUC LSAT Vol. 3, compared against a NACA 2412 proxy because the app currently supports only NACA 4-digit analysis.
 
 ## Source quality notes
 
 - `naca0012`, `naca2414`, `naca2415`, and `naca4415` are based on tabulated or directly extractable reference data.
 - `naca0015` and `naca4418r` are official NASA-based cases, but their CSV files are reconstructed from figures and source text rather than copied from a published table.
-- `clarky_case.json` is intentionally a proxy mismatch and should be read as an unsupported-profile stress test, not as a calibration target.
+- `clarky_case.json` is intentionally a proxy mismatch and is excluded from `benchmark_summary.csv` and `benchmark_summary.png`.
 
 ## Important notes
 

@@ -1,6 +1,7 @@
 {
   "case_id": "clarky_proxy_2412_uiuc_re6e4",
   "description": "Clark-Y UIUC drag polar compared against NACA 2412 as the closest supported proxy at Reynolds ~6.1e4",
+  "include_in_summary": false,
   "source": {
     "name": "UIUC Low-Speed Airfoil Tests Vol. 3",
     "url": "https://m-selig.ae.illinois.edu/pd/pub/lsat/vol3/CLARKYB.DRG",

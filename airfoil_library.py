@@ -41,7 +41,7 @@ AIRFOIL_DB = {
     },
     "2414": {
         "re_buckets": [
-            {"re_min": 0, "re_max": 2.0e5, "cl_alpha_per_deg": 0.093, "cl_alpha_neg_scale": 0.89, "cl_alpha_pos_scale": 1.15, "alpha_zero_lift_deg": 1.15, "cl_max": 1.03, "cd0_base": 0.0235, "k_drag": 0.0080, "k_drag_neg": 0.0157, "k_drag_pos": 0.0001, "cl_cd_min": -0.30, "drag_bucket_half_width": 0.03, "drag_rise_linear": 0.0140, "drag_rise_linear_neg": 0.0173, "drag_rise_linear_pos": 0.0108, "pre_stall_curve_start": 0.82, "pre_stall_curve_strength": 0.18, "alpha_stall_deg": 11.8},
+            {"re_min": 0, "re_max": 2.0e5, "cl_alpha_per_deg": 0.093, "cl_alpha_neg_scale": 0.87, "cl_alpha_pos_scale": 1.16, "alpha_zero_lift_deg": 0.75, "cl_max": 1.05, "cd0_base": 0.0235, "k_drag": 0.0080, "k_drag_neg": 0.0157, "k_drag_pos": 0.0001, "cl_cd_min": -0.30, "drag_bucket_half_width": 0.03, "drag_rise_linear": 0.0140, "drag_rise_linear_neg": 0.0173, "drag_rise_linear_pos": 0.0108, "pre_stall_curve_start": 0.84, "pre_stall_curve_strength": 0.15, "alpha_stall_deg": 11.8},
             {"re_min": 2.0e5, "re_max": 1.0e6, "cl_alpha_per_deg": 0.103, "alpha_zero_lift_deg": -1.3, "cl_max": 1.33, "cd0_base": 0.0150, "k_drag": 0.0138, "alpha_stall_deg": 14.6},
             {"re_min": 1.0e6, "re_max": float("inf"), "cl_alpha_per_deg": 0.105, "alpha_zero_lift_deg": -1.5, "cl_max": 1.48, "cd0_base": 0.0126, "k_drag": 0.0128, "alpha_stall_deg": 16.2},
         ]

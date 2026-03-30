@@ -34,8 +34,16 @@ class PointResult:
         return abs(self.cl_model - self.cl_ref)
 
     @property
+    def cl_delta(self) -> float:
+        return self.cl_model - self.cl_ref
+
+    @property
     def cd_abs_err(self) -> float:
         return abs(self.cd_model - self.cd_ref)
+
+    @property
+    def cd_delta(self) -> float:
+        return self.cd_model - self.cd_ref
 
     @property
     def cl_pct_err(self) -> float:
@@ -44,10 +52,22 @@ class PointResult:
         return self.cl_abs_err / abs(self.cl_ref) * 100.0
 
     @property
+    def cl_pct_delta(self) -> float:
+        if abs(self.cl_ref) < 1e-12:
+            return float("nan")
+        return self.cl_delta / abs(self.cl_ref) * 100.0
+
+    @property
     def cd_pct_err(self) -> float:
         if abs(self.cd_ref) < 1e-12:
             return float("nan")
         return self.cd_abs_err / abs(self.cd_ref) * 100.0
+
+    @property
+    def cd_pct_delta(self) -> float:
+        if abs(self.cd_ref) < 1e-12:
+            return float("nan")
+        return self.cd_delta / abs(self.cd_ref) * 100.0
 
 
 @dataclass
@@ -57,13 +77,17 @@ class CaseSummary:
     source_name: str
     source_url: str
     points: int
+    mean_cl_delta: float
     mean_cl_abs_err: float
     rmse_cl: float
     max_cl_abs_err: float
+    mean_cl_pct_delta: float
     mean_cl_pct_err: float
+    mean_cd_delta: float
     mean_cd_abs_err: float
     rmse_cd: float
     max_cd_abs_err: float
+    mean_cd_pct_delta: float
     mean_cd_pct_err: float
 
 
@@ -84,6 +108,10 @@ def load_case(path: Path) -> dict:
     if missing:
         raise ValueError(f"Missing keys in case file {path}: {', '.join(missing)}")
     return case
+
+
+def case_in_summary(case: dict) -> bool:
+    return bool(case.get("include_in_summary", True))
 
 
 def discover_case_paths(case_arg: str | None) -> list[Path]:
@@ -239,9 +267,13 @@ def write_markdown_report(path: Path, case: dict, points: list[PointResult], csv
 
 
 def build_case_summary(case: dict, case_path: Path, points: list[PointResult]) -> CaseSummary:
+    cl_delta = [p.cl_delta for p in points]
     cl_abs = [p.cl_abs_err for p in points]
+    cd_delta = [p.cd_delta for p in points]
     cd_abs = [p.cd_abs_err for p in points]
+    cl_pct_delta = [p.cl_pct_delta for p in points]
     cl_pct = [p.cl_pct_err for p in points]
+    cd_pct_delta = [p.cd_pct_delta for p in points]
     cd_pct = [p.cd_pct_err for p in points]
     return CaseSummary(
         case_id=str(case["case_id"]),
@@ -249,13 +281,17 @@ def build_case_summary(case: dict, case_path: Path, points: list[PointResult]) -
         source_name=str(case.get("source", {}).get("name", "-")),
         source_url=str(case.get("source", {}).get("url", "-")),
         points=len(points),
+        mean_cl_delta=_safe_mean(cl_delta),
         mean_cl_abs_err=_safe_mean(cl_abs),
         rmse_cl=_rmse([p.cl_model - p.cl_ref for p in points]),
         max_cl_abs_err=max(cl_abs),
+        mean_cl_pct_delta=_safe_mean(cl_pct_delta),
         mean_cl_pct_err=_safe_mean(cl_pct),
+        mean_cd_delta=_safe_mean(cd_delta),
         mean_cd_abs_err=_safe_mean(cd_abs),
         rmse_cd=_rmse([p.cd_model - p.cd_ref for p in points]),
         max_cd_abs_err=max(cd_abs),
+        mean_cd_pct_delta=_safe_mean(cd_pct_delta),
         mean_cd_pct_err=_safe_mean(cd_pct),
     )
 
@@ -270,13 +306,17 @@ def write_summary_csv(path: Path, summaries: list[CaseSummary]) -> None:
             "source_name",
             "source_url",
             "points",
+            "mean_cl_delta",
             "mean_cl_abs_err",
             "rmse_cl",
             "max_cl_abs_err",
+            "mean_cl_pct_delta",
             "mean_cl_pct_err",
+            "mean_cd_delta",
             "mean_cd_abs_err",
             "rmse_cd",
             "max_cd_abs_err",
+            "mean_cd_pct_delta",
             "mean_cd_pct_err",
         ])
         for s in summaries:
@@ -286,13 +326,17 @@ def write_summary_csv(path: Path, summaries: list[CaseSummary]) -> None:
                 s.source_name,
                 s.source_url,
                 s.points,
+                f"{s.mean_cl_delta:.6g}",
                 f"{s.mean_cl_abs_err:.6g}",
                 f"{s.rmse_cl:.6g}",
                 f"{s.max_cl_abs_err:.6g}",
+                f"{s.mean_cl_pct_delta:.6g}" if not math.isnan(s.mean_cl_pct_delta) else "nan",
                 f"{s.mean_cl_pct_err:.6g}" if not math.isnan(s.mean_cl_pct_err) else "nan",
+                f"{s.mean_cd_delta:.6g}",
                 f"{s.mean_cd_abs_err:.6g}",
                 f"{s.rmse_cd:.6g}",
                 f"{s.max_cd_abs_err:.6g}",
+                f"{s.mean_cd_pct_delta:.6g}" if not math.isnan(s.mean_cd_pct_delta) else "nan",
                 f"{s.mean_cd_pct_err:.6g}" if not math.isnan(s.mean_cd_pct_err) else "nan",
             ])
 
@@ -301,33 +345,37 @@ def write_summary_chart(path: Path, summaries: list[CaseSummary]) -> Path | None
     if plt is None or not summaries:
         return None
     labels = [s.case_id for s in summaries]
-    cl_vals = [s.mean_cl_abs_err for s in summaries]
-    cd_vals = [s.mean_cd_abs_err for s in summaries]
-    cl_pct_vals = [s.mean_cl_pct_err for s in summaries]
-    cd_pct_vals = [s.mean_cd_pct_err for s in summaries]
+    cl_delta_vals = [s.mean_cl_delta for s in summaries]
+    cd_delta_vals = [s.mean_cd_delta for s in summaries]
+    cl_pct_delta_vals = [s.mean_cl_pct_delta for s in summaries]
+    cd_pct_delta_vals = [s.mean_cd_pct_delta for s in summaries]
     x = list(range(len(summaries)))
     fig, axes = plt.subplots(2, 2, figsize=(15, 9), constrained_layout=True)
-    axes[0, 0].bar(x, cl_vals, color="#1f77b4")
-    axes[0, 0].set_title("Mean |Cl error| by case")
-    axes[0, 0].set_ylabel("Mean |Cl error|")
+    axes[0, 0].bar(x, cl_delta_vals, color="#1f77b4")
+    axes[0, 0].axhline(0.0, color="#666666", linewidth=1.0)
+    axes[0, 0].set_title("Mean Cl delta by case")
+    axes[0, 0].set_ylabel("Mean Cl delta")
     axes[0, 0].set_xticks(x, labels, rotation=30, ha="right")
     axes[0, 0].grid(axis="y", linestyle="--", alpha=0.4)
 
-    axes[0, 1].bar(x, cd_vals, color="#d62728")
-    axes[0, 1].set_title("Mean |Cd error| by case")
-    axes[0, 1].set_ylabel("Mean |Cd error|")
+    axes[0, 1].bar(x, cd_delta_vals, color="#d62728")
+    axes[0, 1].axhline(0.0, color="#666666", linewidth=1.0)
+    axes[0, 1].set_title("Mean Cd delta by case")
+    axes[0, 1].set_ylabel("Mean Cd delta")
     axes[0, 1].set_xticks(x, labels, rotation=30, ha="right")
     axes[0, 1].grid(axis="y", linestyle="--", alpha=0.4)
 
-    axes[1, 0].bar(x, cl_pct_vals, color="#17a2b8")
-    axes[1, 0].set_title("Mean Cl % error by case")
-    axes[1, 0].set_ylabel("Mean Cl % error")
+    axes[1, 0].bar(x, cl_pct_delta_vals, color="#17a2b8")
+    axes[1, 0].axhline(0.0, color="#666666", linewidth=1.0)
+    axes[1, 0].set_title("Mean Cl % difference by case")
+    axes[1, 0].set_ylabel("Mean Cl % difference")
     axes[1, 0].set_xticks(x, labels, rotation=30, ha="right")
     axes[1, 0].grid(axis="y", linestyle="--", alpha=0.4)
 
-    axes[1, 1].bar(x, cd_pct_vals, color="#ff7f0e")
-    axes[1, 1].set_title("Mean Cd % error by case")
-    axes[1, 1].set_ylabel("Mean Cd % error")
+    axes[1, 1].bar(x, cd_pct_delta_vals, color="#ff7f0e")
+    axes[1, 1].axhline(0.0, color="#666666", linewidth=1.0)
+    axes[1, 1].set_title("Mean Cd % difference by case")
+    axes[1, 1].set_ylabel("Mean Cd % difference")
     axes[1, 1].set_xticks(x, labels, rotation=30, ha="right")
     axes[1, 1].grid(axis="y", linestyle="--", alpha=0.4)
 
@@ -337,7 +385,7 @@ def write_summary_chart(path: Path, summaries: list[CaseSummary]) -> Path | None
     return path
 
 
-def run_case(case_path: Path, args: argparse.Namespace) -> tuple[Path, Path, CaseSummary]:
+def run_case(case_path: Path, args: argparse.Namespace) -> tuple[dict, Path, Path, CaseSummary]:
     case = load_case(case_path)
     ref_path = Path(case["reference_csv"])
     rows = load_reference_rows(ref_path)
@@ -382,7 +430,7 @@ def run_case(case_path: Path, args: argparse.Namespace) -> tuple[Path, Path, Cas
     write_comparison_csv(csv_path, points)
     write_markdown_report(report_path, case, points, csv_path)
     summary = build_case_summary(case, case_path, points)
-    return csv_path, report_path, summary
+    return case, csv_path, report_path, summary
 
 
 def main() -> int:
@@ -390,8 +438,9 @@ def main() -> int:
     case_paths = discover_case_paths(args.case)
     summaries: list[CaseSummary] = []
     for case_path in case_paths:
-        csv_path, report_path, summary = run_case(case_path, args)
-        summaries.append(summary)
+        case, csv_path, report_path, summary = run_case(case_path, args)
+        if case_in_summary(case):
+            summaries.append(summary)
         print(f"Processed case: {case_path}")
         print(f"Generated CSV: {csv_path}")
         print(f"Generated report: {report_path}")

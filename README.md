@@ -22,6 +22,7 @@ When you need a 4-digit NACA profile ready for CAD or simulation, starting from 
 Between calculations, formats, and different tools, the path from idea to a usable profile slows the project and adds friction.
 
 Airfoil Tools keeps it all in one GUI: generate the profile, export to `.pts` or `.dxf`, and get a quick `lift` and `drag` estimate (not CFD).
+Benchmark validation against NASA, UIUC, and NLR/OSU reference data shows good agreement on the best-supported cases, with mean `Cl` differences around `0.3%` to `5%` and mean `Cd` differences around `6%` to `9%`. Harder low-Reynolds cases can still reach about `20%` mean `Cl` difference.
 
 ## What you get right away
 
