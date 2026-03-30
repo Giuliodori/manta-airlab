@@ -4,6 +4,7 @@
 # See LICENSE and COMMERCIAL-LICENSE.md for details.
 
 import importlib
+import argparse
 import math
 import os
 import subprocess
@@ -106,6 +107,12 @@ def ensure_required_deps():
         return False
 
     return True
+
+
+def ensure_numpy():
+    global np
+    if np is None:
+        np = importlib.import_module("numpy")
 
 
 
@@ -501,6 +508,23 @@ def write_dxf_polyline(path: str, x, y, layer: str = "AIRFOIL"):
     points_2d = [(float(xv), float(yv)) for xv, yv in zip(x, y)]
     msp.add_lwpolyline(points_2d, format="xy", dxfattribs={"layer": layer, "closed": True})
 
+    doc.saveas(path)
+
+
+def write_dxf_polyline_cli(path: str, x, y, layer: str = "AIRFOIL"):
+    """CLI DXF export: does not prompt for dependency installation."""
+    try:
+        import ezdxf
+    except ImportError as exc:
+        raise RuntimeError("DXF export requires 'ezdxf'. Install with: pip install ezdxf") from exc
+
+    x, y = close_profile(x, y)
+    doc = ezdxf.new("R2010")
+    if layer not in doc.layers:
+        doc.layers.add(name=layer)
+    msp = doc.modelspace()
+    points_2d = [(float(xv), float(yv)) for xv, yv in zip(x, y)]
+    msp.add_lwpolyline(points_2d, format="xy", dxfattribs={"layer": layer, "closed": True})
     doc.saveas(path)
 
 
@@ -1948,17 +1972,149 @@ class App:
 
 
 def main():
-    if not ensure_required_deps():
+    exit_code = run_cli(sys.argv[1:])
+    if exit_code is None:
+        if not ensure_required_deps():
+            return
+        root = tk.Tk()
+        try:
+            style = ttk.Style()
+            if "vista" in style.theme_names():
+                style.theme_use("vista")
+        except Exception:
+            pass
+        App(root)
+        root.mainloop()
         return
-    root = tk.Tk()
+    if exit_code != 0:
+        raise SystemExit(exit_code)
+
+
+def _positive_float(value: str, name: str):
+    parsed = float(value)
+    if parsed <= 0:
+        raise ValueError(f"{name} must be greater than zero.")
+    return parsed
+
+
+def _positive_int(value: str, name: str, minimum: int = 1):
+    parsed = int(value)
+    if parsed < minimum:
+        raise ValueError(f"{name} must be at least {minimum}.")
+    return parsed
+
+
+def build_cli_parser():
+    parser = argparse.ArgumentParser(
+        prog="airfoil_tools.py",
+        description="Airfoil Tools CLI (GUI remains the default with no arguments).",
+    )
+    subparsers = parser.add_subparsers(dest="command")
+
+    export_cmd = subparsers.add_parser("export", help="Export NACA 4-digit profile to .pts or .dxf.")
+    export_cmd.add_argument("code", help="NACA 4-digit code, e.g. 2412.")
+    export_cmd.add_argument("--format", choices=["pts", "dxf"], default="pts", help="Output format (default: pts).")
+    export_cmd.add_argument("-o", "--output", help="Output file path. Default: NACA<code>.<format>")
+    export_cmd.add_argument("--chord-mm", default=100.0, type=float, help="Chord in millimeters (default: 100).")
+    export_cmd.add_argument("--points-side", default=100, type=int, help="Points per side (default: 100).")
+    export_cmd.add_argument("--rotation-deg", default=0.0, type=float, help="Clockwise rotation in degrees.")
+    export_cmd.add_argument("--mirror-x", action="store_true", help="Mirror across X axis.")
+    export_cmd.add_argument("--mirror-y", action="store_true", help="Mirror across Y axis.")
+    export_cmd.add_argument("--decimals", default=6, type=int, help="Decimals for .pts output (default: 6).")
+
+    analyze_cmd = subparsers.add_parser("analyze", help="Quick aerodynamic estimate for a NACA 4-digit profile.")
+    analyze_cmd.add_argument("code", help="NACA 4-digit code, e.g. 0012.")
+    analyze_cmd.add_argument("--velocity-kmh", default=50.0, type=float, help="Flow speed in km/h (default: 50).")
+    analyze_cmd.add_argument("--span-mm", default=200.0, type=float, help="Span in millimeters (default: 200).")
+    analyze_cmd.add_argument("--chord-mm", default=100.0, type=float, help="Chord in millimeters (default: 100).")
+    analyze_cmd.add_argument("--alpha-deg", default=0.0, type=float, help="Angle of attack in degrees (default: 0).")
+    analyze_cmd.add_argument(
+        "--fluid",
+        default="water",
+        choices=["air", "water", "salt water", "custom"],
+        help="Fluid preset (default: water).",
+    )
+    analyze_cmd.add_argument("--density", type=float, help="Density [kg/m^3] for --fluid custom.")
+    analyze_cmd.add_argument("--viscosity", type=float, help="Dynamic viscosity [Pa·s] for --fluid custom.")
+
+    return parser
+
+
+def run_cli(argv):
+    if not argv:
+        return None
+
+    parser = build_cli_parser()
+    args = parser.parse_args(argv)
+    if not args.command:
+        return None
+
     try:
-        style = ttk.Style()
-        if "vista" in style.theme_names():
-            style.theme_use("vista")
-    except Exception:
-        pass
-    App(root)
-    root.mainloop()
+        parse_naca4_code(args.code)
+        if args.command == "export":
+            ensure_numpy()
+            chord = _positive_float(str(args.chord_mm), "Chord") / 1000.0
+            n_side = _positive_int(str(args.points_side), "Points per side", minimum=2)
+            decimals = _positive_int(str(args.decimals), "Decimals", minimum=0)
+            if decimals > 12:
+                raise ValueError("Decimals must be between 0 and 12.")
+
+            values = {
+                "mode": "flat",
+                "code": args.code.strip(),
+                "chord": chord,
+                "n_side": n_side,
+                "angle_deg": float(args.rotation_deg),
+                "mirror_x": bool(args.mirror_x),
+                "mirror_y": bool(args.mirror_y),
+            }
+            x, y = generate_airfoil_xy(values)
+            fmt = args.format
+            output = args.output or f"NACA{args.code}.{fmt}"
+            if fmt == "pts":
+                pts_text, _, _, _ = write_pts_text(x, y, decimals=decimals)
+                with open(output, "w", encoding="utf-8", newline="\n") as f:
+                    f.write(pts_text)
+            else:
+                write_dxf_polyline_cli(output, x, y)
+
+            print(f"Saved {fmt.upper()} file: {output}")
+            return 0
+
+        if args.command == "analyze":
+            chord = _positive_float(str(args.chord_mm), "Chord") / 1000.0
+            span = _positive_float(str(args.span_mm), "Span") / 1000.0
+            velocity = _positive_float(str(args.velocity_kmh), "Velocity") / 3.6
+            alpha_deg = float(args.alpha_deg)
+
+            if args.fluid == "custom":
+                if args.density is None or args.viscosity is None:
+                    raise ValueError("Custom fluid requires both --density and --viscosity.")
+                density = _positive_float(str(args.density), "Density")
+                viscosity = _positive_float(str(args.viscosity), "Viscosity")
+            else:
+                density = FLUID_PRESETS[args.fluid]["rho"]
+                viscosity = FLUID_PRESETS[args.fluid]["mu"]
+
+            reynolds = compute_reynolds(velocity=velocity, chord=chord, density=density, viscosity=viscosity)
+            params = get_airfoil_parameters(code=args.code.strip(), reynolds=reynolds, use_internal_library=True, overrides={})
+            cl, cd = compute_cl_cd(alpha_deg=alpha_deg, params=params)
+            area = chord * span
+            lift, drag, ld_ratio = compute_lift_drag(density=density, velocity=velocity, area=area, cl=cl, cd=cd)
+
+            print(f"NACA {args.code.strip()} | alpha={alpha_deg:g} deg | fluid={args.fluid}")
+            print(f"Reynolds: {reynolds:.3e}")
+            print(f"Cl: {cl:.4f}")
+            print(f"Cd: {cd:.4f}")
+            print(f"Lift: {lift:.3f} N ({lift / 9.80665:.3f} kgf)")
+            print(f"Drag: {drag:.3f} N ({drag / 9.80665:.3f} kgf)")
+            print(f"L/D: {ld_ratio:.3f}")
+            print(f"Model source: {params.get('source', 'fallback')}")
+            return 0
+
+    except Exception as exc:
+        parser.error(str(exc))
+    return 2
 
 
 if __name__ == "__main__":

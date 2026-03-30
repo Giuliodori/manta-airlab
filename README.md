@@ -87,6 +87,14 @@ python airfoil_tools.py
 On Windows you can also use:
 - `airfoil-tools.bat`
 
+## CLI (advanced / optional)
+
+The GUI remains the primary workflow.
+
+If you are a power user and want terminal commands, see the dedicated CLI guide:
+
+- [`CLI.md`](CLI.md)
+
 ## CAD examples for `.pts` and `.dxf`
 
 ### CAD/3D with DXF support
