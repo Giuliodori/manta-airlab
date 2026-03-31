@@ -51,8 +51,6 @@ If you cloned or downloaded the repository ZIP, the main Windows file is:
 - Double-click `airfoil-tools\dist\airfoil-tools.exe`.
 - The GUI opens and you can generate and export profiles immediately.
 
-Alternative quick start from the repository folder:
-- Double-click `airfoil-tools.bat`
 
 ## Python source (optional)
 
