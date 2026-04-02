@@ -1,4 +1,4 @@
-"""Manta AirLab by Duilio.cc ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Fabio Giuliodori."""
+"""Manta AirLab by Duilio.cc | Fabio Giuliodori."""
 
 # SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Duilio-Commercial
 #
@@ -493,7 +493,7 @@ def build_curved_airfoil_xy(
     tx = np.cos(phi)
     ty = sign * np.sin(phi)
 
-    # local arc normal (rotated +90ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°)
+    # local arc normal (rotated +90 deg)
     nx = -ty
     ny = tx
 
@@ -785,7 +785,6 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("Airfoil Tools")
-        self.logo_image = None
         self.style = ttk.Style()
         self.theme_var = tk.StringVar(
             value=THEME_KEY_TO_LABEL.get(GUI_DEFAULTS["theme"], THEME_OPTION_LABELS[0])
@@ -914,6 +913,28 @@ class App:
             ],
             selectbackground=[("readonly", self.colors["selection"])],
             selectforeground=[("readonly", self.colors["text"])],
+        )
+        self.style.configure(
+            "TSpinbox",
+            fieldbackground=self.colors["entry"],
+            background=self.colors["panel_alt"],
+            foreground=self.colors["text"],
+            arrowcolor=self.colors["fg"],
+            bordercolor=self.colors["border"],
+            lightcolor=self.colors["border"],
+            darkcolor=self.colors["border"],
+            padding=(6, 4),
+        )
+        self.style.map(
+            "TSpinbox",
+            fieldbackground=[
+                ("readonly", self.colors["entry"]),
+                ("disabled", self.colors["panel_alt"]),
+            ],
+            foreground=[
+                ("readonly", self.colors["text"]),
+                ("disabled", self.colors["muted"]),
+            ],
         )
         self.style.configure(
             "TCheckbutton",
@@ -1124,26 +1145,6 @@ class App:
     def on_theme_changed(self, event=None):
         self.apply_theme(self.theme_var.get())
 
-    def build_logo_header(self, parent):
-        logo_path = os.path.join("images", "logo_airfoil_tools.png")
-        if not os.path.exists(logo_path):
-            return
-        try:
-            logo_image = tk.PhotoImage(file=logo_path)
-        except Exception:
-            self.logo_image = None
-            return
-
-        target_width = 36
-        if logo_image.width() > target_width:
-            downsample = max(1, math.ceil(logo_image.width() / target_width))
-            logo_image = logo_image.subsample(downsample, downsample)
-
-        self.logo_image = logo_image
-        logo_box = ttk.Frame(parent)
-        logo_box.pack(fill="x", pady=(0, 6))
-        ttk.Label(logo_box, image=self.logo_image).pack(anchor="w")
-
     def open_advanced_options(self):
         if self.advanced_window is not None:
             try:
@@ -1165,14 +1166,112 @@ class App:
                 win.destroy()
             finally:
                 self.advanced_window = None
+                self.advanced_mode_combo = None
+                self.advanced_radius_entry = None
+                self.advanced_curv_dir_combo = None
 
         win.protocol("WM_DELETE_WINDOW", _close)
 
         outer = ttk.Frame(win, padding=10)
         outer.pack(fill="both", expand=True)
 
+        profile = ttk.LabelFrame(outer, text="Custom profile", padding=10)
+        profile.pack(fill="x")
+        for col in (1, 3, 5):
+            profile.columnconfigure(col, weight=1)
+
+        ttk.Label(profile, text="NACA code").grid(row=0, column=0, sticky="w", padx=(0, 6), pady=2)
+        code_entry = ttk.Entry(profile, textvariable=self.code_var, width=10, justify="center")
+        code_entry.grid(row=0, column=1, sticky="ew", pady=2)
+        code_entry.bind("<KeyRelease>", self.schedule_update)
+
+        ttk.Label(profile, text="Mode").grid(row=0, column=2, sticky="w", padx=(10, 6), pady=2)
+        self.advanced_mode_combo = ttk.Combobox(
+            profile,
+            textvariable=self.mode_var,
+            values=list(self.mode_map.keys()),
+            state="readonly",
+            width=18,
+        )
+        self.advanced_mode_combo.grid(row=0, column=3, sticky="ew", pady=2)
+        self.advanced_mode_combo.bind("<<ComboboxSelected>>", self.on_mode_changed)
+
+        ttk.Label(profile, text="Rotation [deg]").grid(row=0, column=4, sticky="w", padx=(10, 6), pady=2)
+        angle_entry = ttk.Entry(profile, textvariable=self.angle_var, width=10)
+        angle_entry.grid(row=0, column=5, sticky="ew", pady=2)
+        angle_entry.bind("<KeyRelease>", self.on_geometry_link_changed)
+
+        ttk.Label(profile, text="Camber").grid(row=1, column=0, sticky="w", padx=(0, 6), pady=(6, 2))
+        camber_spin = ttk.Spinbox(
+            profile,
+            from_=0,
+            to=9,
+            textvariable=self.naca_camber_var,
+            width=8,
+            command=self.on_digit_slider_changed,
+        )
+        camber_spin.grid(row=1, column=1, sticky="ew", pady=(6, 2))
+
+        ttk.Label(profile, text="Position").grid(row=1, column=2, sticky="w", padx=(10, 6), pady=(6, 2))
+        pos_spin = ttk.Spinbox(
+            profile,
+            from_=0,
+            to=9,
+            textvariable=self.naca_pos_var,
+            width=8,
+            command=self.on_digit_slider_changed,
+        )
+        pos_spin.grid(row=1, column=3, sticky="ew", pady=(6, 2))
+
+        ttk.Label(profile, text="Thickness").grid(row=1, column=4, sticky="w", padx=(10, 6), pady=(6, 2))
+        thickness_spin = ttk.Spinbox(
+            profile,
+            from_=1,
+            to=40,
+            textvariable=self.naca_thickness_var,
+            width=8,
+            command=self.on_digit_slider_changed,
+        )
+        thickness_spin.grid(row=1, column=5, sticky="ew", pady=(6, 2))
+
+        for spin in (camber_spin, pos_spin, thickness_spin):
+            spin.bind("<KeyRelease>", self.on_digit_spinbox_changed)
+            spin.bind("<FocusOut>", self.on_digit_spinbox_changed)
+
+        ttk.Label(profile, text="Chord [mm]").grid(row=2, column=0, sticky="w", padx=(0, 6), pady=(6, 2))
+        chord_entry = ttk.Entry(profile, textvariable=self.chord_var, width=10)
+        chord_entry.grid(row=2, column=1, sticky="ew", pady=(6, 2))
+        chord_entry.bind("<KeyRelease>", self.on_geometry_link_changed)
+
+        ttk.Label(profile, text="Span [mm]").grid(row=2, column=2, sticky="w", padx=(10, 6), pady=(6, 2))
+        span_entry = ttk.Entry(profile, textvariable=self.span_var, width=10)
+        span_entry.grid(row=2, column=3, sticky="ew", pady=(6, 2))
+        span_entry.bind("<KeyRelease>", self.schedule_update)
+
+        ttk.Label(profile, text="Radius [mm]").grid(row=2, column=4, sticky="w", padx=(10, 6), pady=(6, 2))
+        self.advanced_radius_entry = ttk.Entry(profile, textvariable=self.radius_var, width=10)
+        self.advanced_radius_entry.grid(row=2, column=5, sticky="ew", pady=(6, 2))
+        self.advanced_radius_entry.bind("<KeyRelease>", self.schedule_update)
+
+        ttk.Label(profile, text="Curvature").grid(row=3, column=0, sticky="w", padx=(0, 6), pady=(6, 2))
+        self.advanced_curv_dir_combo = ttk.Combobox(
+            profile,
+            textvariable=self.curvature_dir_var,
+            values=["convex", "concave"],
+            state="readonly",
+            width=12,
+        )
+        self.advanced_curv_dir_combo.grid(row=3, column=1, sticky="ew", pady=(6, 2))
+        self.advanced_curv_dir_combo.bind("<<ComboboxSelected>>", self.schedule_update)
+
+        ttk.Label(
+            profile,
+            text="These controls mirror the main panel and update the live profile in real time.",
+            style="Muted.TLabel",
+        ).grid(row=3, column=2, columnspan=4, sticky="w", padx=(10, 0), pady=(6, 2))
+
         export = ttk.LabelFrame(outer, text="Export formats", padding=10)
-        export.pack(fill="x")
+        export.pack(fill="x", pady=(8, 0))
         export.columnconfigure(1, weight=1)
 
         ttk.Label(export, text="DXF entity").grid(row=0, column=0, sticky="w", padx=(0, 6), pady=4)
@@ -1235,6 +1334,7 @@ class App:
             text="Choose the interface tone that feels more comfortable for long editing sessions.",
             style="Muted.TLabel",
         ).grid(row=1, column=0, columnspan=2, sticky="w", pady=(4, 0))
+        self.update_mode_fields()
 
     def build_compact_layout(self):
         shell = ttk.Frame(self.root, padding=0)
@@ -1296,8 +1396,6 @@ class App:
         main_panes.add(left, weight=0)
         main_panes.add(right, weight=1)
 
-        # Logo moved inside Aerodynamics panel (bottom-right under overrides)
-
         self.code_var = tk.StringVar(value=GUI_DEFAULTS["code"])
         self.chord_var = tk.StringVar(value=GUI_DEFAULTS["chord_mm"])
         self.n_side_var = tk.StringVar(value=GUI_DEFAULTS["points_side"])
@@ -1313,6 +1411,9 @@ class App:
         self.pts_format_var = tk.StringVar(value=GUI_DEFAULTS["pts_format"])
         self.csv_format_var = tk.StringVar(value=GUI_DEFAULTS["csv_format"])
         self.advanced_window = None
+        self.advanced_mode_combo = None
+        self.advanced_radius_entry = None
+        self.advanced_curv_dir_combo = None
         # Advanced aerodynamic source toggle kept for future UI re-enable.
         # To restore it, add back the checkbox in the Aerodynamics panel and
         # switch `use_internal_library=True` in `compute_aero_results()` to this variable.
@@ -1620,29 +1721,9 @@ class App:
         e.bind("<KeyRelease>", self.schedule_update)
 
         arow += 1
-        logo_path = os.path.join("images", "logo_airfoil_tools.png")
-        if os.path.exists(logo_path):
-            try:
-                logo_image = tk.PhotoImage(file=logo_path)
-                target_width = 72
-                if logo_image.width() > target_width:
-                    downsample = max(1, math.ceil(logo_image.width() / target_width))
-                    logo_image = logo_image.subsample(downsample, downsample)
-                self.logo_image = logo_image
-                ttk.Label(aero, image=self.logo_image).grid(
-                    row=arow,
-                    column=3,
-                    sticky="e",
-                    pady=(2, 4),
-                )
-            except Exception:
-                self.logo_image = None
-
-        arow += 1
         ttk.Separator(aero, orient="horizontal").grid(row=arow, column=0, columnspan=4, sticky="ew", pady=3)
 
         arow += 1
-        metrics_start_row = arow
         ttk.Label(aero, text="Reynolds [-]").grid(row=arow, column=0, sticky="w", pady=1)
         ttk.Label(aero, textvariable=self.reynolds_out_var).grid(row=arow, column=1, sticky="w", pady=1)
         arow += 1
@@ -1660,32 +1741,6 @@ class App:
         arow += 1
         ttk.Label(aero, text="L/D").grid(row=arow, column=0, sticky="w", pady=1)
         ttk.Label(aero, textvariable=self.ld_out_var).grid(row=arow, column=1, sticky="w", pady=1)
-
-        logo_path = ""
-        for candidate in (
-            os.path.join("images", "logo_airfoil_tools_clean.png"),
-            os.path.join("images", "logo_airfoil_tools.png"),
-        ):
-            if os.path.exists(candidate):
-                logo_path = candidate
-                break
-        if logo_path:
-            try:
-                logo_image = tk.PhotoImage(file=logo_path)
-                target_width = 132
-                if logo_image.width() > target_width:
-                    downsample = max(1, math.ceil(logo_image.width() / target_width))
-                    logo_image = logo_image.subsample(downsample, downsample)
-                self.logo_image = logo_image
-                ttk.Label(aero, image=self.logo_image).grid(
-                    row=metrics_start_row,
-                    column=3,
-                    rowspan=6,
-                    sticky="se",
-                    pady=(0, 2),
-                )
-            except Exception:
-                self.logo_image = None
 
         actions = ttk.LabelFrame(left, text="Export & Tools", padding=8)
         actions.pack(fill="x", pady=(8, 0))
@@ -1998,7 +2053,7 @@ class App:
         self.ax.set_zlim3d(zlim[0] + shift_z, zlim[1] + shift_z)
 
     def mode_internal_value(self):
-        return self.mode_map.get(self.mode_combo.get().strip(), "flat")
+        return self.mode_map.get(self.mode_var.get().strip(), "flat")
 
     def on_mode_changed(self, event=None):
         self.update_mode_fields()
@@ -2011,6 +2066,16 @@ class App:
 
         self.radius_entry.config(state=state)
         self.curv_dir_combo.config(state=readonly_state)
+        if self.advanced_radius_entry is not None:
+            try:
+                self.advanced_radius_entry.config(state=state)
+            except Exception:
+                pass
+        if self.advanced_curv_dir_combo is not None:
+            try:
+                self.advanced_curv_dir_combo.config(state=readonly_state)
+            except Exception:
+                pass
         self.keep_developed_var.set(True)
 
     def on_fluid_changed(self, event=None):
@@ -2087,23 +2152,56 @@ class App:
         code = self.code_var.get().strip()
         if len(code) != 4 or not code.isdigit():
             return
+        camber, pos, thickness = self.normalize_naca_digits(int(code[0]), int(code[1]), int(code[2:4]))
+        normalized_code = f"{camber}{pos}{thickness:02d}"
         self._syncing_code = True
         try:
-            self.naca_camber_var.set(int(code[0]))
-            self.naca_pos_var.set(int(code[1]))
-            self.naca_thickness_var.set(int(code[2:4]))
+            self.naca_camber_var.set(camber)
+            self.naca_pos_var.set(pos)
+            self.naca_thickness_var.set(thickness)
+            if code != normalized_code:
+                self.code_var.set(normalized_code)
         finally:
             self._syncing_code = False
+
+    @staticmethod
+    def normalize_naca_digits(camber, pos, thickness):
+        camber = max(0, min(int(camber), 9))
+        pos = max(0, min(int(pos), 9))
+        thickness = max(1, min(int(thickness), 40))
+        if camber != 0 and pos == 0:
+            pos = 1
+        return camber, pos, thickness
+
+    def on_digit_spinbox_changed(self, _event=None):
+        self.root.after_idle(self._sync_digit_spinboxes)
+
+    def _sync_digit_spinboxes(self):
+        if self._syncing_code:
+            return
+        try:
+            camber = self.naca_camber_var.get()
+            pos = self.naca_pos_var.get()
+            thickness = self.naca_thickness_var.get()
+        except (tk.TclError, ValueError):
+            return
+        camber, pos, thickness = self.normalize_naca_digits(camber, pos, thickness)
+        self.naca_camber_var.set(camber)
+        self.naca_pos_var.set(pos)
+        self.naca_thickness_var.set(thickness)
+        self.on_digit_slider_changed()
 
     def on_digit_slider_changed(self, _value=None):
         if self._syncing_code:
             return
-        camber = self.naca_camber_var.get()
-        pos = self.naca_pos_var.get()
-        thickness = self.naca_thickness_var.get()
-        if camber != 0 and pos == 0:
-            pos = 1
-            self.naca_pos_var.set(1)
+        camber, pos, thickness = self.normalize_naca_digits(
+            self.naca_camber_var.get(),
+            self.naca_pos_var.get(),
+            self.naca_thickness_var.get(),
+        )
+        self.naca_camber_var.set(camber)
+        self.naca_pos_var.set(pos)
+        self.naca_thickness_var.set(thickness)
         self._syncing_code = True
         try:
             self.code_var.set(f"{camber}{pos}{thickness:02d}")
@@ -2778,7 +2876,7 @@ def build_cli_parser():
         help="Fluid preset (default: water).",
     )
     analyze_cmd.add_argument("--density", type=float, help="Density [kg/m^3] for --fluid custom.")
-    analyze_cmd.add_argument("--viscosity", type=float, help="Dynamic viscosity [PaÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·s] for --fluid custom.")
+    analyze_cmd.add_argument("--viscosity", type=float, help="Dynamic viscosity [Pa*s] for --fluid custom.")
 
     return parser
 
