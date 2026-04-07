@@ -815,7 +815,10 @@ class App:
         screen_w = max(self.root.winfo_screenwidth(), 1280)
         screen_h = max(self.root.winfo_screenheight(), 800)
 
-        height = max(800, int(screen_h * 0.9))
+        if screen_h <= 1080:
+            height = screen_h
+        else:
+            height = 1080
         window_ratio = (16 / 9) * 1.2
         width = max(1260, int(height * window_ratio))
 
