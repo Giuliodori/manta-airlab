@@ -11,20 +11,23 @@
     "dist",
     "benchmarks",
     "benchmarks/data",
-    "benchmarks/results"
+    "benchmarks/results",
+    "database/_local"
   ],
   "files.watcherExclude": {
     "**/__pycache__/**": true,
     "build/**": true,
     "dist/**": true,
     "benchmarks/data/**": true,
-    "benchmarks/results/**": true
+    "benchmarks/results/**": true,
+    "database/_local/**": true
   },
   "search.exclude": {
     "**/__pycache__": true,
     "build": true,
     "dist": true,
     "benchmarks/data": true,
-    "benchmarks/results": true
+    "benchmarks/results": true,
+    "database/_local": true
   }
 }

@@ -17,3 +17,7 @@ benchmarks/results/*
 
 # Local benchmark source captures
 benchmarks/data_sources/
+
+# Local database workspace
+database/_local/
+airfoils_database.db
