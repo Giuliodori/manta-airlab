@@ -24,7 +24,7 @@ jobs:
 
       - name: Lint (py_compile)
         run: |
-          python -m py_compile airfoil_tools.py airfoil_library.py release_tool/release_tool.py
+          python -m py_compile manta_airfoil_tools.py airfoil_library.py release_tool/release_tool.py
 
       - name: Import smoke test
         run: |

@@ -8,7 +8,7 @@ This page documents the optional command-line interface for advanced users.
 ## Quick help
 
 ```bash
-python airfoil_tools.py --help
+python manta_airfoil_tools.py --help
 ```
 
 ## Supported commands
@@ -23,19 +23,19 @@ python airfoil_tools.py --help
 Export `.pts` (default format):
 
 ```bash
-python airfoil_tools.py export 2412 -o NACA2412.pts
+python manta_airfoil_tools.py export 2412 -o NACA2412.pts
 ```
 
 Export `.dxf`:
 
 ```bash
-python airfoil_tools.py export 0012 --format dxf -o NACA0012.dxf
+python manta_airfoil_tools.py export 0012 --format dxf -o NACA0012.dxf
 ```
 
 Export `.csv` (XYZ, no header):
 
 ```bash
-python airfoil_tools.py export 2412 --format csv -o NACA2412.csv
+python manta_airfoil_tools.py export 2412 --format csv -o NACA2412.csv
 ```
 
 Main options:
@@ -63,13 +63,13 @@ If `--output` is omitted, the default filename is `NACA<code>.<format>`.
 Quick estimate:
 
 ```bash
-python airfoil_tools.py analyze 2412 --velocity-kmh 60 --span-mm 250 --chord-mm 120 --alpha-deg 3
+python manta_airfoil_tools.py analyze 2412 --velocity-kmh 60 --span-mm 250 --chord-mm 120 --alpha-deg 3
 ```
 
 Custom fluid:
 
 ```bash
-python airfoil_tools.py analyze 0012 --fluid custom --density 1.225 --viscosity 1.81e-5
+python manta_airfoil_tools.py analyze 0012 --fluid custom --density 1.225 --viscosity 1.81e-5
 ```
 
 Main options:

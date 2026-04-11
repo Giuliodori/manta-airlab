@@ -84,7 +84,7 @@ On some Windows systems, a newly downloaded unsigned executable may show a Smart
 - The GUI opens and you can generate and export a profile immediately.
 
 Alternative quick start from the repository folder:
-- Double-click `manta-airfoil-tools.bat`
+- Double-click `manta_airfoil_tools.bat`
 
 ## Python source (optional)
 
@@ -109,11 +109,11 @@ If `ezdxf` is missing, the app will prompt you when saving `.dxf`.
 Run:
 
 ```bash
-python airfoil_tools.py
+python manta_airfoil_tools.py
 ```
 
 On Windows you can also use:
-- `manta-airfoil-tools.bat`
+- `manta_airfoil_tools.bat`
 
 ## CLI (advanced / optional)
 

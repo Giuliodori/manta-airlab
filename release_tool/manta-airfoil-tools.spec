@@ -8,7 +8,7 @@ block_cipher = None
 
 
 a = Analysis(
-    [str(root / "airfoil_tools.py")],
+    [str(root / "manta_airfoil_tools.py")],
     pathex=[str(root)],
     binaries=[],
     datas=[(str(root / "images"), "images")],

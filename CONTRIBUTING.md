@@ -2,8 +2,8 @@
 
 ## Application Entry Point
 
-The main application entry point is `airfoil_tools.py`.
-On Windows, use `manta-airfoil-tools.bat`.
+The main application entry point is `manta_airfoil_tools.py`.
+On Windows, use `manta_airfoil_tools.bat`.
 
 ## Release Build
 
@@ -48,10 +48,10 @@ Project credit should remain visible in repository-facing materials:
 Run these before opening a PR:
 
 ```bash
-python -m py_compile airfoil_tools.py airfoil_library.py release_tool/release_tool.py
+python -m py_compile manta_airfoil_tools.py airfoil_library.py release_tool/release_tool.py
 python -c "import airfoil_library; print('OK')"
-python airfoil_tools.py --help
-python airfoil_tools.py export --help
-python airfoil_tools.py analyze --help
+python manta_airfoil_tools.py --help
+python manta_airfoil_tools.py export --help
+python manta_airfoil_tools.py analyze --help
 python benchmarks/compare_cli_vs_reference.py --case benchmarks/cases/naca0012_case.json
 ```

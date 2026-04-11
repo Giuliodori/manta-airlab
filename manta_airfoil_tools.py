@@ -2802,7 +2802,7 @@ def _positive_int(value: str, name: str, minimum: int = 1):
 
 def build_cli_parser():
     parser = argparse.ArgumentParser(
-        prog="airfoil_tools.py",
+        prog="manta_airfoil_tools.py",
         description="Manta AirLab CLI for Airfoil Tools (GUI remains the default with no arguments).",
         epilog="Manta AirLab — Airfoil Tools by Fabio Giuliodori | duilio.cc",
     )

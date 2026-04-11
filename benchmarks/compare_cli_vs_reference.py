@@ -104,7 +104,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Compare CLI analyze values to reference Cl/Cd data.")
     parser.add_argument("--case", help="Path to benchmark case JSON. If omitted, run all JSON cases in benchmarks/cases.")
     parser.add_argument("--python", default=sys.executable, help="Python executable used to run CLI.")
-    parser.add_argument("--cli", default="airfoil_tools.py", help="Path to airfoil_tools.py.")
+    parser.add_argument("--cli", default="manta_airfoil_tools.py", help="Path to manta_airfoil_tools.py.")
     parser.add_argument("--output-dir", default="benchmarks/results", help="Directory for generated report files.")
     return parser.parse_args()
 

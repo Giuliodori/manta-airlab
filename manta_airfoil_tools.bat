@@ -5,19 +5,19 @@ title Manta AirLab
 
 where pyw >nul 2>nul
 if %errorlevel%==0 (
-    start "" pyw airfoil_tools.py
+    start "" pyw manta_airfoil_tools.py
     exit
 )
 
 where py >nul 2>nul
 if %errorlevel%==0 (
-    start "" py airfoil_tools.py
+    start "" py manta_airfoil_tools.py
     exit
 )
 
 where python >nul 2>nul
 if %errorlevel%==0 (
-    start "" python airfoil_tools.py
+    start "" python manta_airfoil_tools.py
     exit
 )
 
