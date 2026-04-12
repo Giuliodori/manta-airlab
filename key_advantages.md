@@ -5,11 +5,12 @@ It should not rely on broad marketing claims or on competitor limitations that m
 
 ## What Manta AirLab really does today
 
-Manta AirLab is a lightweight desktop app for working with airfoil sections in dual source mode: `4-digit NACA` and `Library` profiles from local DB.
+Manta AirLab is a lightweight desktop app for working with airfoil sections in dual source mode: procedural `NACA` generation and reusable `Library` profiles from local DB.
+With the current DB snapshot, users start with `1406` profiles and `40,576` polar rows already available locally.
 
 Confirmed capabilities in the current project:
 
-- Generate 4-digit NACA profiles from the numeric code.
+- Generate procedural NACA profiles from numeric code.
 - Select reusable airfoils from `database/airfoil.db` (geometry + polars + metadata).
 - Edit the main profile parameters directly: camber, camber position, thickness, chord, span, rotation.
 - Work in both flat mode and curved mode with radius-based bending.
@@ -35,7 +36,7 @@ Confirmed capabilities in the current project:
 
 Important limits to state clearly:
 
-- The workflow now supports both procedural `NACA 4-digit` and DB `Library` profiles, but it remains a section-level tool (not full wing/3D CFD).
+- The workflow supports procedural generation + DB Library reuse, with fast geometry and aero feedback centered on section workflows.
 - In `Library` mode, coefficient quality depends on tabular coverage (`Re`, `alpha`, convergenza XFOIL) and therefore outside-domain values are intentionally handled as `ND` for forces.
 - `XFOIL Simulation` is an override on demand for the current condition, not a persistent multi-condition solver pipeline.
 - The tool is optimized for fast first-pass design/export loops, not for replacing detailed validation workflows.
@@ -178,7 +179,7 @@ When comparing against competitors, stay on these angles:
 - integrated geometry + quick estimate in one place
 - easier onboarding for non-specialists
 - transparent "quick estimate" positioning instead of overpromising solver depth
-- focused scope that removes unnecessary setup for common 4-digit NACA work
+- focused scope that removes unnecessary setup for common airfoil selection/tuning work
 - interactive GUI for first-pass design, with CLI available when repeatability matters
 - commercial licensing path available in addition to open-source use
 
@@ -198,7 +199,7 @@ A quick review of the main alternatives on the market today shows a recurring pa
 - larger legacy engineering tools often provide broader analysis depth, but ask for more setup, more domain knowledge, or more steps before geometry is ready for downstream use
 
 That matters because Manta AirLab does not need to win on solver breadth.
-It wins when the user wants the shortest path from a known 4-digit NACA idea to editable geometry, a quick engineering check, and exportable output.
+It wins when the user wants the shortest path from profile choice (generated or library) to editable geometry, a quick engineering check, and exportable output.
 
 ## Additional advantages surfaced by competitor review
 
@@ -254,9 +255,9 @@ This is especially relevant for educational, prototyping, and maker use cases wh
 
 A broad airfoil or wing-analysis suite can be powerful, but it also asks the user to navigate more concepts, more analysis modes, and more setup choices.
 
-Manta AirLab benefits from being narrower:
+Manta AirLab benefits from being focused:
 
-- one clear geometry family
+- one unified geometry pipeline across multiple profile sources
 - one immediate editing model
 - one fast preview loop
 - one direct export path
@@ -374,7 +375,7 @@ Because the tool is focused, visual, and explicit about limits, it is easier to 
 
 That makes it stronger for:
 
-- teaching what NACA digits do geometrically
+- teaching both NACA digit geometry and library-profile comparisons
 - showing how camber, thickness, and angle affect the section
 - demonstrating how Reynolds number and fluid choice shift a quick estimate
 - comparing practical geometry changes without introducing a full solver stack
@@ -385,15 +386,15 @@ This educational clarity is a real advantage over tools that are more powerful b
 
 These are aligned with the current product.
 
-- "Design a 4-digit NACA wing section directly from the GUI and see lift and drag react in real time."
-- "A fast desktop workflow for 4-digit NACA profiles, from geometry tuning to export."
-- "Generate, inspect, bend, and export NACA sections in one local app."
+- "Design and compare airfoils directly from the GUI and see lift and drag react in real time."
+- "A fast desktop workflow for generated and library airfoils, from geometry tuning to export."
+- "Generate, inspect, bend, and export airfoil sections in one local app."
 - "Adjust the profile with sliders, get a quick aerodynamic check, and export ready-to-use geometry."
-- "Built for practical 4-digit NACA work, not for bloated workflows."
+- "Built for practical airfoil workflows, not for bloated setup."
 - "Use the GUI for rapid iteration, then switch to the CLI when you need repeatable exports or analysis."
 - "From first section idea to CAD- or print-ready geometry with less cleanup in between."
 - "Focused on the part of the workflow that usually slows teams down: getting usable geometry out fast."
-- "A practical first-pass design tool for 4-digit NACA sections, with clearer limits and less friction."
+- "A practical first-pass design tool for airfoils, with clearer limits and less friction."
 - "Flexible enough for CAD and scripting handoff, without turning into a heavyweight analysis suite."
 - "Useful for wing, hydrofoil, and workshop geometry workflows where local speed matters more than solver complexity."
 - "Inspect, tune, mirror, preview, and export the section without bouncing through extra tools."
@@ -406,7 +407,7 @@ The safest message is:
 - web tools are convenient for lookup and exploration
 - classic solvers are strong for deeper analysis
 - broader suites are useful when the project needs many methods, but they usually add setup and learning overhead
-- Manta AirLab is strongest when you need a fast, local, export-oriented workflow for 4-digit NACA sections
+- Manta AirLab is strongest when you need a fast, local, export-oriented workflow for generated and library airfoils
 
 That positioning is honest and already supported by the repository.
 

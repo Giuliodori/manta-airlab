@@ -4,7 +4,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/giuliodori/airfoil-tools/ci.yml?branch=main)](https://github.com/giuliodori/airfoil-tools/actions)
 
 Manta AirLab is a local desktop app for designing, previewing, and exporting airfoils without bouncing between calculators, scripts, CAD cleanup, and heavyweight solver workflows.
-You can work in dual source mode: fast procedural `NACA 4-digit` generation or `Library` profiles loaded from `database/airfoil.db` (geometry + polars + metadata).
+You can work in dual source mode: fast procedural `NACA` generation plus reusable `Library` profiles loaded from `database/airfoil.db` (geometry + polars + metadata).
 Its main advantage is direct GUI-based design: move controls for chord, span, rotation, mirroring, curved shaping, and aerodynamic inputs, and immediately see how geometry plus `lift`/`drag` react.
 
 Project sponsorship: `duilio.cc`
@@ -37,7 +37,7 @@ It does not replace CFD or experimental testing. It helps you arrive at a good f
 
 ## What you can do in a minute
 
-- Instant generation of 4-digit NACA profiles
+- Instant procedural NACA profile generation
 - Switch source between `NACA` and `Library` profiles from local DB
 - Live preview while you adjust the section from the GUI
 - Switch between `2D` and `3D` visualization of the same geometry
@@ -57,6 +57,11 @@ It does not replace CFD or experimental testing. It helps you arrive at a good f
 - Preview the generated point data in-app and copy it directly when needed
 - Use it for first-pass wing or foil sizing before CFD and physical tests
 
+Current local Library footprint (`database/airfoil.db`, snapshot 12 April 2026):
+- `1406` profiles with geometry
+- `40,576` polar rows (`21,646` converged)
+- ratings and usage metadata for fast filtering/ranking workflows
+
 
 ![Manta](images/manta.jpg)
 
@@ -64,7 +69,7 @@ It does not replace CFD or experimental testing. It helps you arrive at a good f
 
 - Makers and builders who want geometry ready for CAD or 3D printing
 - RC, marine, and hydrofoil experiments where speed matters more than deep solver setup
-- Students and labs that need a simple way to inspect classic NACA sections
+- Students and labs that need a simple way to inspect and compare airfoil families
 - Engineers doing early-stage concept work and preliminary sizing before CFD or detailed validation
 - Technical users who want both a GUI workflow and a CLI path for repeatable export or analysis
 
@@ -202,7 +207,7 @@ Commonly usable with:
 ## Why this workflow is different
 
 Many airfoil tools are strong at lookup, comparison, or deeper solver work.
-Manta AirLab is strongest when you already know you want a 4-digit NACA section and need the shortest path from idea to usable geometry.
+Manta AirLab is strongest when you need the shortest path from airfoil selection/tuning to usable geometry and quick aerodynamic feedback.
 
 That means:
 
@@ -212,7 +217,7 @@ That means:
 - optional `2D` / `3D` confirmation before export
 - local export to CAD- and prototype-friendly formats without browser dependency
 
-That scope remains intentional: fast first-pass work with practical geometry/export flow, now extended with reusable Library profiles and DB-based aerodynamic interpolation.
+That scope remains intentional: fast first-pass work with practical geometry/export flow, now extended with a large reusable Library and DB-based aerodynamic interpolation.
 
 ## A short history of NACA profiles: the "LEGO" of aerodynamics
 
