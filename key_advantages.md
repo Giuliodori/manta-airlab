@@ -35,9 +35,22 @@ Confirmed capabilities in the current project:
 
 Important limits to state clearly:
 
-- It is optimized for NACA + Library first-pass workflows, not a full multi-physics design suite.
-- The aerodynamic model is a quick estimate, not CFD and not a full XFOIL replacement.
-- The tool is optimized for speed and practicality, not for high-end solver depth.
+- The workflow now supports both procedural `NACA 4-digit` and DB `Library` profiles, but it remains a section-level tool (not full wing/3D CFD).
+- In `Library` mode, coefficient quality depends on tabular coverage (`Re`, `alpha`, convergenza XFOIL) and therefore outside-domain values are intentionally handled as `ND` for forces.
+- `XFOIL Simulation` is an override on demand for the current condition, not a persistent multi-condition solver pipeline.
+- The tool is optimized for fast first-pass design/export loops, not for replacing detailed validation workflows.
+
+## Dataset snapshot (12 April 2026)
+
+Current `database/airfoil.db` footprint used by the app:
+
+- `airfoils`: `1406` profiles (all currently valid for geometry ingestion).
+- Geometry coverage: `1406/1406` with JSON point geometry.
+- `airfoil_polars_xfoil`: `40,576` polar rows, `21,646` converged (`~53.3%`).
+- Polar coverage axes currently present in DB: `4` Reynolds levels (`150k` to `1.25M`) and `8` alpha levels (`-4°` to `10°`).
+- Ratings: `1,406` global rows + `25,308` detail rows.
+- Usage metadata: `4,285` application rows + `8,452` aircraft usage rows.
+- Stored XFOIL runs: `5,624`.
 
 ## Real advantages to emphasize
 
