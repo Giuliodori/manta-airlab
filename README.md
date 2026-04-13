@@ -24,6 +24,11 @@ Download the latest Windows release:
 https://github.com/giuliodori/manta-airfoil-tools/releases/latest
 ```
 
+Latest release includes two Windows builds:
+
+- `Manta_Airfoil_Tools_portable_<version>.exe` (portable, no installer)
+- `Manta_Airfoil_Tools_setup_<version>.exe` (installer)
+
 ## Why people use it
 
 Most early airfoil work is not blocked by solver depth. It is blocked by workflow friction:
