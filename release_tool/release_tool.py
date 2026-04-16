@@ -56,7 +56,9 @@ def _load_wizard_source_image(root: Path):
                 import cairosvg
 
                 png_bytes = cairosvg.svg2png(url=str(svg_path))
-                img = Image.open(io.BytesIO(png_bytes))
+                if not isinstance(png_bytes, (bytes, bytearray)):
+                    continue
+                img = Image.open(io.BytesIO(bytes(png_bytes)))
                 img.load()
                 return img
             except Exception:
