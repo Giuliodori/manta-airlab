@@ -219,6 +219,14 @@ class App:
         self._library_usage_preset_map = {
             (item.get("label") or "").strip(): item for item in self._library_usage_presets
         }
+        self._autostable_preset_label = next(
+            (
+                (item.get("label") or "").strip()
+                for item in self._library_usage_presets
+                if (item.get("profile_type_filter") or "").strip().lower() == "autostable"
+            ),
+            "Autostable",
+        )
         self._library_profiles = []
         self._library_geometry_cache = {}
         self._library_polar_sets_cache = {}
@@ -1298,6 +1306,7 @@ class App:
         chips = ttk.Frame(filters)
         chips.grid(row=2, column=0, columnspan=2, sticky="w")
         preset_labels = [item["label"] for item in self._library_usage_presets]
+        autostable_col = None
         for idx, label in enumerate(preset_labels):
             btn = tk.Button(
                 chips,
@@ -1317,17 +1326,25 @@ class App:
             )
             btn.grid(row=0, column=idx, padx=(0, 6), pady=2, sticky="w")
             self._library_usage_buttons[label] = btn
+            if label == self._autostable_preset_label:
+                autostable_col = idx
 
-        self.library_autostable_slider_frame = ttk.Frame(filters)
-        self.library_autostable_slider_frame.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(2, 2))
+        if autostable_col is None:
+            autostable_col = 0
+        chips.grid_columnconfigure(autostable_col, weight=1)
+
+        self.library_autostable_slider_frame = ttk.Frame(chips)
+        self.library_autostable_slider_frame.grid(
+            row=1, column=autostable_col, sticky="ew", padx=(0, 6), pady=(0, 2)
+        )
         self.library_autostable_slider = tk.Scale(
             self.library_autostable_slider_frame,
-            from_=-100,
+            from_=0,
             to=100,
             resolution=1,
             orient="horizontal",
             showvalue=False,
-            length=210,
+            length=80,
             variable=self.library_autostable_threshold_var,
             highlightthickness=0,
             command=self.on_library_autostable_slider_changed,
@@ -1337,7 +1354,7 @@ class App:
             activebackground=self.colors["accent"],
             bd=0,
         )
-        self.library_autostable_slider.pack(anchor="w")
+        self.library_autostable_slider.pack(fill="x")
         ttk.Label(
             filters,
             text="Click a preset to filter. Use All for the complete list.",
@@ -1347,7 +1364,7 @@ class App:
             row=5, column=0, columnspan=2, sticky="w", pady=(4, 0)
         )
         self._refresh_library_usage_preset_buttons()
-        self._refresh_autostable_slider_visibility()
+        self._sync_autostable_slider_width()
         self._refresh_usage_filter_hint()
 
         radar = ttk.LabelFrame(outer, text="Radar Selection", padding=8)
@@ -2473,6 +2490,7 @@ class App:
                 autostable_min_score = float(self.library_autostable_threshold_var.get())
             except Exception:
                 autostable_min_score = 20.0
+            autostable_min_score = max(0.0, min(100.0, autostable_min_score))
             self.library_autostable_threshold_var.set(autostable_min_score)
         rows = self._airfoil_db.list_profiles_with_ratings(
             search=self.library_search_var.get().strip() or None,
@@ -2501,6 +2519,7 @@ class App:
                     fg=self.colors["text"],
                     highlightbackground=self.colors["border"],
                 )
+        self._sync_autostable_slider_width()
 
     def _refresh_usage_filter_hint(self):
         active_key = self.library_usage_preset_var.get().strip()
@@ -2511,16 +2530,19 @@ class App:
         else:
             self.library_radar_hint_var.set("Click in the radar to focus matching profiles.")
 
-    def _refresh_autostable_slider_visibility(self):
-        if self.library_autostable_slider_frame is None:
+    def _sync_autostable_slider_width(self):
+        if self.library_autostable_slider is None:
             return
-        active_key = self.library_usage_preset_var.get().strip()
-        preset = self._library_usage_preset_map.get(active_key, {})
-        profile_type_filter = (preset.get("profile_type_filter") or "").strip().lower()
-        if profile_type_filter == "autostable":
-            self.library_autostable_slider_frame.grid()
-        else:
-            self.library_autostable_slider_frame.grid_remove()
+        autostable_btn = self._library_usage_buttons.get(self._autostable_preset_label)
+        if autostable_btn is None:
+            return
+        try:
+            autostable_btn.update_idletasks()
+            width = int(autostable_btn.winfo_width())
+            if width > 12:
+                self.library_autostable_slider.configure(length=width)
+        except Exception:
+            pass
 
     def on_library_autostable_slider_changed(self, _value=None):
         self.schedule_library_browser_refresh()
@@ -2529,7 +2551,6 @@ class App:
         fallback = self._library_usage_presets[0]["label"] if self._library_usage_presets else "All"
         self.library_usage_preset_var.set(key or fallback)
         self._refresh_library_usage_preset_buttons()
-        self._refresh_autostable_slider_visibility()
         self._refresh_usage_filter_hint()
         self.refresh_library_browser_results()
 
