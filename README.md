@@ -13,11 +13,6 @@ Validation ground truth is experimental data; quick estimates and `XFOIL` are co
 
 Open-source sponsor: [`Duilio.cc`](https://duilio.cc)
 
-If this project was useful to you, you can actively support it in two ways:
-
-- Offer me a coffee: [`Buy me a coffee`](https://buymeacoffee.com/giuliodori)
-- Join the project and contribute your skills: [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)
-
 ![Main GUI](images/gui.png)
 ![Library Browser](images/library_browser.png)
 
@@ -68,6 +63,11 @@ Manta Airlab compresses that workflow into one local app with direct GUI editing
 3. Launch the program.
 
 Unsigned executables may show a SmartScreen prompt on first launch.
+
+If this project was useful to you, you can actively support it in two ways:
+
+- Offer me a coffee: [`Buy me a coffee`](https://buymeacoffee.com/giuliodori)
+- Join the project and contribute your skills: [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)
 
 ## Python source (optional)
 
